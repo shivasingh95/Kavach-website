@@ -1,0 +1,19 @@
+name: Deploy Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deploy Hook (Backend)
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+        
+      - name: Trigger Vercel Deploy Hook (Frontend)
+        run: curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        
+      # Database migration would ideally run securely, often within the backend deploy step
+      # or a separate GitHub Action connecting to the Neon DB.

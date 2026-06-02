@@ -1,0 +1,280 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+  PUBLIC
+}
+
+enum CTFCategory {
+  WEB
+  CRYPTO
+  FORENSICS
+  PWNING
+  MISC
+  OSINT
+  REVERSE_ENGINEERING
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+  EXPERT
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  passwordHash  String
+  role          Role      @default(PUBLIC)
+  avatar        String?
+  bio           String?
+  github        String?
+  linkedin      String?
+  isVerified    Boolean   @default(false)
+  verifyToken   String?   @unique
+  resetToken    String?   @unique
+  resetExpiry   DateTime?
+  totalPoints   Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  refreshTokens  RefreshToken[]
+  events         Event[]         @relation("EventCreator")
+  challenges     CTFChallenge[]  @relation("ChallengeCreator")
+  submissions    CTFSubmission[] @relation("SubmissionUser")
+  reviewed       CTFSubmission[] @relation("SubmissionReviewer")
+  achievements   Achievement[]   @relation("AchievementUser")
+  blogPosts      BlogPost[]
+  announcements  Announcement[]
+  auditLogs      AuditLog[]
+  notifications  Notification[]
+  rsvps          EventRSVP[]
+
+  @@index([email])
+  @@index([role])
+  @@index([totalPoints(sort: Desc)])
+}
+
+model RefreshToken {
+  id         String   @id @default(cuid())
+  userId     String
+  token      String   @unique
+  expiresAt  DateTime
+  isRevoked  Boolean  @default(false)
+  userAgent  String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String
+  content     String
+  date        DateTime
+  endDate     DateTime?
+  location    String?
+  imageUrl    String?
+  isPublished Boolean  @default(false)
+  capacity    Int?
+  rsvpCount   Int      @default(0)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy     User          @relation("EventCreator", fields: [createdById], references: [id])
+  achievements  Achievement[]
+  rsvps         EventRSVP[]
+
+  @@index([slug])
+  @@index([date])
+  @@index([isPublished])
+  @@index([createdById])
+}
+
+model EventRSVP {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@index([eventId])
+}
+
+model CTFChallenge {
+  id          String      @id @default(cuid())
+  title       String
+  description String
+  category    CTFCategory
+  difficulty  Difficulty
+  points      Int
+  flagHash    String
+  hints       Json        @default("[]")
+  isActive    Boolean     @default(false)
+  solveCount  Int         @default(0)
+  createdById String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  createdBy   User            @relation("ChallengeCreator", fields: [createdById], references: [id])
+  submissions CTFSubmission[]
+
+  @@index([category])
+  @@index([difficulty])
+  @@index([isActive])
+  @@index([createdById])
+}
+
+model CTFSubmission {
+  id           String           @id @default(cuid())
+  userId       String
+  challengeId  String
+  submittedFlag String
+  isCorrect    Boolean
+  status       SubmissionStatus @default(PENDING)
+  proofUrl     String?
+  reviewedById String?
+  reviewNote   String?
+  submittedAt  DateTime         @default(now())
+  reviewedAt   DateTime?
+
+  user       User         @relation("SubmissionUser", fields: [userId], references: [id], onDelete: Cascade)
+  challenge  CTFChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  reviewedBy User?        @relation("SubmissionReviewer", fields: [reviewedById], references: [id])
+
+  @@index([userId])
+  @@index([challengeId])
+  @@index([status])
+  @@index([isCorrect])
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  imageUrl    String?
+  userId      String
+  eventId     String?
+  createdById String
+  createdAt   DateTime @default(now())
+
+  user      User   @relation("AchievementUser", fields: [userId], references: [id], onDelete: Cascade)
+  event     Event? @relation(fields: [eventId], references: [id])
+
+  @@index([userId])
+  @@index([eventId])
+}
+
+model BlogPost {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  content     String
+  excerpt     String
+  tags        String[]
+  coverImage  String?
+  isPublished Boolean   @default(false)
+  viewCount   Int       @default(0)
+  readTime    Int       @default(0)
+  authorId    String
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  author     User              @relation(fields: [authorId], references: [id])
+  reactions  BlogReaction[]
+
+  @@index([slug])
+  @@index([authorId])
+  @@index([isPublished])
+  @@index([tags])
+}
+
+model BlogReaction {
+  id        String   @id @default(cuid())
+  postId    String
+  emoji     String
+  count     Int      @default(1)
+  createdAt DateTime @default(now())
+
+  post BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, emoji])
+  @@index([postId])
+}
+
+model Announcement {
+  id          String    @id @default(cuid())
+  title       String
+  body        String
+  isPinned    Boolean   @default(false)
+  targetRole  Role?
+  expiresAt   DateTime?
+  createdById String
+  createdAt   DateTime  @default(now())
+
+  createdBy User @relation(fields: [createdById], references: [id])
+
+  @@index([isPinned])
+  @@index([expiresAt])
+  @@index([createdById])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  isRead    Boolean  @default(false)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String
+  target     String
+  targetId   String?
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
