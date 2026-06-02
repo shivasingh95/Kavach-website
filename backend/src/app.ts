@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import { logger } from './utils/logger';
+import authRoutes from './routes/auth.routes';
+import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
 
@@ -31,11 +33,13 @@ app.use(morgan('combined', {
 }));
 
 // API Routes
+app.use('/api/v1/auth', authRoutes);
+
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', uptime: process.uptime(), version: '1.0.0' });
 });
 
-// Global Error Handler (to be imported and used here)
-// app.use(errorHandler);
+// Global Error Handler
+app.use(errorHandler);
 
 export default app;

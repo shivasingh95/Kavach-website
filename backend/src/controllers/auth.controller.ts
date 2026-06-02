@@ -1,0 +1,73 @@
+import { Request, Response, NextFunction } from 'express';
+import * as authService from '../services/auth.service';
+import { logger } from '../utils/logger';
+
+export const register = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = await authService.registerUser(req.body);
+    logger.info(`New user registered: ${user.email}`);
+    
+    res.status(201).json({
+      success: true,
+      data: { user },
+      message: 'Registration successful'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const login = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    const userAgent = req.headers['user-agent'] || 'unknown';
+    
+    const { user, accessToken, refreshToken } = await authService.loginUser(req.body, ip, userAgent);
+    
+    // Set HTTP-only cookie for refresh token
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    logger.info(`User logged in: ${user.email}`);
+
+    res.status(200).json({
+      success: true,
+      data: { user, accessToken },
+      message: 'Login successful'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const logout = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (refreshToken) {
+      await authService.logoutUser(refreshToken);
+    }
+    
+    res.clearCookie('refreshToken');
+    res.status(200).json({
+      success: true,
+      message: 'Logged out successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMe = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.status(200).json({
+      success: true,
+      data: { user: req.user }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
