@@ -5,6 +5,11 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import { logger } from './utils/logger';
 import authRoutes from './routes/auth.routes';
+import ctfRoutes from './routes/ctf.routes';
+import eventsRoutes from './routes/events.routes';
+import blogRoutes from './routes/blog.routes';
+import usersRoutes from './routes/users.routes';
+import announcementsRoutes from './routes/announcements.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -34,6 +39,11 @@ app.use(morgan('combined', {
 
 // API Routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/ctf', ctfRoutes);
+app.use('/api/v1/events', eventsRoutes);
+app.use('/api/v1/blog', blogRoutes);
+app.use('/api/v1/users', usersRoutes);
+app.use('/api/v1/announcements', announcementsRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', uptime: process.uptime(), version: '1.0.0' });

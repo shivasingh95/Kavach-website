@@ -71,3 +71,22 @@ export const getMe = async (req: Request, res: Response, next: NextFunction) => 
     next(error);
   }
 };
+
+export const refreshTokenHandler = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      return res.status(401).json({ success: false, error: 'No refresh token provided', statusCode: 401 });
+    }
+
+    const { accessToken } = await authService.refreshAccessToken(refreshToken);
+    
+    res.status(200).json({
+      success: true,
+      data: { accessToken },
+      message: 'Token refreshed successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};

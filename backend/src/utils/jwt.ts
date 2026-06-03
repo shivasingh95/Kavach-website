@@ -1,14 +1,14 @@
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 
 export const signAccessToken = (userId: string, role: string) => {
   return jwt.sign({ id: userId, role }, process.env.ACCESS_TOKEN_SECRET!, {
-    expiresIn: process.env.ACCESS_TOKEN_EXPIRY || '15m',
+    expiresIn: (process.env.ACCESS_TOKEN_EXPIRY || '15m') as SignOptions['expiresIn'],
   });
 };
 
 export const signRefreshToken = (userId: string) => {
   return jwt.sign({ id: userId }, process.env.REFRESH_TOKEN_SECRET!, {
-    expiresIn: process.env.REFRESH_TOKEN_EXPIRY || '7d',
+    expiresIn: (process.env.REFRESH_TOKEN_EXPIRY || '7d') as SignOptions['expiresIn'],
   });
 };
 

@@ -1,0 +1,99 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // =========================================================================
+    // HELPER FUNCTIONS
+    // =========================================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      // Checks the custom claim 'role' set by the backend Admin SDK
+      return isAuthenticated() && request.auth.token.role == 'ADMIN';
+    }
+    
+    function isMemberOrAdmin() {
+      return isAuthenticated() && (request.auth.token.role == 'ADMIN' || request.auth.token.role == 'MEMBER');
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // =========================================================================
+    // COLLECTION RULES
+    // =========================================================================
+
+    // ─── Users ───────────────────────────────────────────────────────────────
+    // User can read/write own doc. ADMIN can read all.
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isOwner(uid);
+      allow create, delete: if isAdmin(); // Usually created via Admin SDK on signup
+    }
+
+    // ─── Events ──────────────────────────────────────────────────────────────
+    // ADMIN/MEMBER can create. Anyone can read published events.
+    match /events/{id} {
+      // Allow read if published, or if the user is staff (to view drafts)
+      allow read: if (resource != null && resource.data.isPublished == true) || isMemberOrAdmin();
+      allow create, update, delete: if isMemberOrAdmin();
+    }
+
+    // ─── CTF Challenges ──────────────────────────────────────────────────────
+    // ADMIN can create/edit. Anyone can read active challenges.
+    // IMPORTANT NOTE ON flagHash:
+    // Firestore DOES NOT support field-level read exclusions natively. 
+    // If a client can read the document, they receive all fields, including flagHash.
+    // To truly secure the flagHash from client SDKs, it MUST be removed from this 
+    // document and stored either exclusively on the backend or in a private subcollection 
+    // (e.g., /ctf_challenges/{id}/secrets/flag) that denies all client reads.
+    match /ctf_challenges/{id} {
+      allow read: if (resource != null && resource.data.isActive == true) || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ─── CTF Submissions ─────────────────────────────────────────────────────
+    // Authenticated users can create their own. ADMIN/MEMBER can read all. 
+    // Only ADMIN/MEMBER can update status field.
+    match /ctf_submissions/{id} {
+      // Users can read their own submissions; Staff can read all
+      allow read: if (isAuthenticated() && resource.data.userId == request.auth.uid) || isMemberOrAdmin();
+      
+      // Users can only create submissions tagged with their own UID
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      
+      // Only staff can update existing submissions (e.g., changing status to APPROVED)
+      allow update: if isMemberOrAdmin() && request.resource.data.userId == resource.data.userId;
+      
+      allow delete: if isAdmin();
+    }
+
+    // ─── Blog Posts ──────────────────────────────────────────────────────────
+    // ADMIN/MEMBER can create. Anyone can read published posts.
+    match /blog_posts/{id} {
+      allow read: if (resource != null && resource.data.isPublished == true) || isMemberOrAdmin();
+      allow create, update, delete: if isMemberOrAdmin();
+    }
+
+    // ─── Announcements ───────────────────────────────────────────────────────
+    // ADMIN/MEMBER can create. Visibility depends on targetRole field.
+    match /announcements/{id} {
+      allow read: if resource.data.targetRole == 'PUBLIC' 
+                  || (isAuthenticated() && resource.data.targetRole == request.auth.token.role)
+                  || isMemberOrAdmin();
+      allow create, update, delete: if isMemberOrAdmin();
+    }
+
+    // ─── Leaderboard ─────────────────────────────────────────────────────────
+    // Read-only for all. Only backend (admin SDK) can write.
+    match /leaderboard/{uid} {
+      allow read: if true;
+      allow write: if false; // Admin SDK bypasses security rules automatically
+    }
+  }
+}

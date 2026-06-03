@@ -12,7 +12,7 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
     
     return true;
   } catch (error) {
-    logger.error(`Failed to send email to ${to}:`, error);
+    logger.error({ err: error }, `Failed to send email to ${to}`);
     throw new Error('Email sending failed');
   }
 };
