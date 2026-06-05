@@ -1,7 +1,7 @@
 import admin from 'firebase-admin';
 import { logger } from './logger';
 
-let _db: FirebaseFirestore.Firestore | null = null;
+const _db: FirebaseFirestore.Firestore | null = null;
 
 const initFirebase = () => {
   if (admin.apps.length > 0) return;
@@ -30,5 +30,9 @@ initFirebase();
 export const db = admin.apps.length
   ? admin.firestore()
   : (null as unknown as FirebaseFirestore.Firestore);
+
+if (db) {
+  db.settings({ ignoreUndefinedProperties: true });
+}
 
 export default admin;

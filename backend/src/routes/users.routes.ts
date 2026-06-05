@@ -36,4 +36,20 @@ router.patch(
   usersController.updateUserRole
 );
 
+router.patch(
+  '/:id/toggle-active',
+  requireAuth,
+  rbac('ADMIN'),
+  auditLog('TOGGLE_USER_ACTIVE', 'user'),
+  usersController.toggleActive
+);
+
+router.delete(
+  '/:id',
+  requireAuth,
+  rbac('ADMIN'),
+  auditLog('DELETE_USER', 'user'),
+  usersController.deleteUser
+);
+
 export default router;

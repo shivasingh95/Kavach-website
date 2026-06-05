@@ -5,6 +5,17 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Points, PointMaterial } from "@react-three/drei";
 import * as THREE from "three";
 
+// Suppress the upstream r3f v8 THREE.Clock deprecation warning —
+// it's emitted from inside @react-three/fiber and can't be fixed
+// without upgrading to r3f v9+.
+if (typeof window !== "undefined") {
+  const _warn = console.warn.bind(console);
+  console.warn = (...args: any[]) => {
+    if (typeof args[0] === "string" && args[0].includes("THREE.Clock")) return;
+    _warn(...args);
+  };
+}
+
 function ParticleField() {
   const ref = useRef<THREE.Points>(null!);
 
@@ -65,7 +76,23 @@ export default function Scene3D() {
     <Canvas
       camera={{ position: [0, 0, 5], fov: 60 }}
       style={{ position: "absolute", inset: 0 }}
+      // Cap DPR at 1.5 — higher values cause GPU memory pressure → context loss
       dpr={[1, 1.5]}
+      gl={{
+        powerPreference: "default",
+        failIfMajorPerformanceCaveat: false,
+        antialias: false, // Reduces GPU load significantly on particle-heavy scenes
+      }}
+      onCreated={({ gl }) => {
+        // Allow browser to recover the context instead of dying silently
+        gl.domElement.addEventListener("webglcontextlost", (e) => {
+          e.preventDefault();
+          console.warn("[Scene3D] WebGL context lost — will attempt restore");
+        });
+        gl.domElement.addEventListener("webglcontextrestored", () => {
+          console.info("[Scene3D] WebGL context restored");
+        });
+      }}
     >
       <ambientLight intensity={0.5} />
       <ParticleField />

@@ -1,307 +1,752 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
-import { DataTable, ColumnDef } from "@/components/admin/DataTable";
+import { useAuth } from "@/lib/AuthContext";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import {
+  Plus,
+  Search,
+  Calendar,
+  MapPin,
+  Globe,
+  Edit2,
+  Trash2,
+  Users,
+  Loader2,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  ImageOff,
+  ToggleLeft,
+  ToggleRight,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { Plus, Edit2, Trash2 } from "lucide-react";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
+  SheetDescription,
 } from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { EventForm, EventData } from "@/components/admin/EventForm";
 
-interface Event {
-  id: string;
-  title: string;
-  description: string;
-  content: string;
-  date: string;
-  location?: string;
-  isOnline?: boolean;
-  meetLink?: string;
-  imageUrl?: string;
-  isPublished: boolean;
-  rsvpCount: number;
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+type StatusFilter = "all" | "published" | "draft";
+
+interface ConfirmDialog {
+  open: boolean;
+  eventId: string | null;
+  eventTitle: string;
 }
 
-const eventSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
-  content: z.string().min(1, "Content is required"),
-  date: z.string().min(1, "Date is required"),
-  location: z.string().optional(),
-  isOnline: z.boolean().optional(),
-  meetLink: z.string().url().optional().or(z.literal("")),
-  imageUrl: z.string().url().optional().or(z.literal("")),
-  isPublished: z.boolean().default(false),
-});
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-type EventFormValues = z.infer<typeof eventSchema>;
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+// ─── Skeleton row ────────────────────────────────────────────────────────────
+
+function SkeletonRow() {
+  return (
+    <tr className="border-b border-white/[0.04] animate-pulse">
+      <td className="px-4 py-3">
+        <div className="w-10 h-10 rounded-lg bg-white/5" />
+      </td>
+      <td className="px-4 py-3">
+        <div className="h-3.5 w-40 bg-white/5 rounded mb-1.5" />
+        <div className="h-2.5 w-24 bg-white/5 rounded" />
+      </td>
+      <td className="px-4 py-3">
+        <div className="h-3 w-28 bg-white/5 rounded" />
+      </td>
+      <td className="px-4 py-3">
+        <div className="h-5 w-16 rounded-full bg-white/5" />
+      </td>
+      <td className="px-4 py-3">
+        <div className="h-3 w-10 bg-white/5 rounded" />
+      </td>
+      <td className="px-4 py-3">
+        <div className="h-5 w-20 rounded-full bg-white/5" />
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex gap-2">
+          <div className="h-7 w-7 rounded-lg bg-white/5" />
+          <div className="h-7 w-7 rounded-lg bg-white/5" />
+          <div className="h-7 w-7 rounded-lg bg-white/5" />
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+// ─── Delete Confirm Dialog ────────────────────────────────────────────────────
+
+function DeleteConfirmDialog({
+  dialog,
+  onConfirm,
+  onCancel,
+  isDeleting,
+}: {
+  dialog: ConfirmDialog;
+  onConfirm: () => void;
+  onCancel: () => void;
+  isDeleting: boolean;
+}) {
+  if (!dialog.open) return null;
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={onCancel}
+      />
+      {/* Dialog */}
+      <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-[#0d1224] p-6 shadow-2xl">
+        <div className="flex flex-col items-center text-center gap-4">
+          <div className="p-3 rounded-full bg-red-500/10 border border-red-500/20">
+            <AlertTriangle size={24} className="text-red-400" />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-[var(--text-primary)]">
+              Delete Event?
+            </h3>
+            <p className="text-sm text-[var(--text-secondary)] mt-1">
+              <span className="font-medium text-[var(--text-primary)]">
+                "{dialog.eventTitle}"
+              </span>{" "}
+              will be permanently removed. This action cannot be undone.
+            </p>
+          </div>
+          <div className="flex gap-3 w-full">
+            <Button
+              variant="ghost"
+              onClick={onCancel}
+              disabled={isDeleting}
+              className="flex-1 border border-white/10 hover:bg-white/5"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={onConfirm}
+              disabled={isDeleting}
+              className="flex-1 bg-red-500/10 text-red-400 border border-red-500/20 
+                hover:bg-red-500/20 hover:border-red-500/40 transition-all gap-2"
+            >
+              {isDeleting ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Trash2 size={14} />
+              )}
+              Delete
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
+const PAGE_SIZE = 8;
 
 export default function AdminEventsPage() {
-  const [events, setEvents] = useState<Event[]>([]);
+  const { isAdmin, isLoading: authLoading } = useAuth();
+  const router = useRouter();
+
+  // ── State ──
+  const [events, setEvents] = useState<EventData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Sheet state
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editingEvent, setEditingEvent] = useState<EventData | null>(null);
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<EventFormValues>({
-    resolver: zodResolver(eventSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      content: "",
-      date: new Date().toISOString().slice(0, 16),
-      location: "",
-      isOnline: false,
-      meetLink: "",
-      imageUrl: "",
-      isPublished: false,
-    }
+  // Delete confirm
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog>({
+    open: false,
+    eventId: null,
+    eventTitle: "",
   });
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const isOnline = watch("isOnline");
-  const isPublished = watch("isPublished");
+  // Toggling publish state
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  const fetchEvents = async () => {
+  // ── Auth guard ──
+  useEffect(() => {
+    if (!authLoading && !isAdmin) {
+      toast.error("Admin access required.");
+      router.replace("/dashboard");
+    }
+  }, [authLoading, isAdmin, router]);
+
+  // ── Fetch Events ──
+  const fetchEvents = useCallback(async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const res = await api.get('/events');
-      setEvents(res.data?.data?.events || []);
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to load events");
+      const res = await api.get("/events");
+      const data: EventData[] =
+        res.data?.data?.events ?? res.data?.events ?? [];
+      setEvents(data);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message ?? "Failed to load events");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+  }, [fetchEvents]);
 
-  const openNewForm = () => {
+  // ── Client-side filter + pagination ──
+  const filtered = useMemo(() => {
+    let result = events;
+
+    // Status filter
+    if (statusFilter === "published") result = result.filter((e) => e.isPublished);
+    if (statusFilter === "draft") result = result.filter((e) => !e.isPublished);
+
+    // Search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (e) =>
+          e.title.toLowerCase().includes(q) ||
+          e.description?.toLowerCase().includes(q) ||
+          e.location?.toLowerCase().includes(q)
+      );
+    }
+
+    return result;
+  }, [events, statusFilter, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, currentPage]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
+
+  // ── Open Sheet ──
+  const openCreateSheet = () => {
     setEditingEvent(null);
-    reset({
-      title: "",
-      description: "",
-      content: "",
-      date: new Date().toISOString().slice(0, 16),
-      location: "",
-      isOnline: false,
-      meetLink: "",
-      imageUrl: "",
-      isPublished: false,
-    });
     setIsSheetOpen(true);
   };
 
-  const openEditForm = (event: Event) => {
+  const openEditSheet = (event: EventData) => {
     setEditingEvent(event);
-    reset({
-      title: event.title,
-      description: event.description,
-      content: event.content,
-      date: new Date(event.date).toISOString().slice(0, 16),
-      location: event.location || "",
-      isOnline: event.isOnline || false,
-      meetLink: event.meetLink || "",
-      imageUrl: event.imageUrl || "",
-      isPublished: event.isPublished,
-    });
     setIsSheetOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this event?")) return;
+  const handleSheetSuccess = () => {
+    setIsSheetOpen(false);
+    setEditingEvent(null);
+    fetchEvents();
+  };
+
+  const handleSheetCancel = () => {
+    setIsSheetOpen(false);
+    setEditingEvent(null);
+  };
+
+  // ── Inline Publish Toggle ──
+  const handleTogglePublish = async (event: EventData) => {
+    setTogglingId(event.id);
     try {
-      await api.delete(`/events/${id}`);
+      await api.patch(`/events/${event.id}`, {
+        isPublished: !event.isPublished,
+      });
+      toast.success(
+        event.isPublished
+          ? `"${event.title}" moved to drafts`
+          : `"${event.title}" published ✓`
+      );
+      // Optimistic update
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.id === event.id ? { ...e, isPublished: !e.isPublished } : e
+        )
+      );
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.message ?? "Failed to update publish status"
+      );
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  // ── Delete ──
+  const initiateDelete = (event: EventData) => {
+    setConfirmDialog({ open: true, eventId: event.id, eventTitle: event.title });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!confirmDialog.eventId) return;
+    setIsDeleting(true);
+    try {
+      await api.delete(`/events/${confirmDialog.eventId}`);
       toast.success("Event deleted");
-      fetchEvents();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to delete event");
+      setEvents((prev) => prev.filter((e) => e.id !== confirmDialog.eventId));
+      setConfirmDialog({ open: false, eventId: null, eventTitle: "" });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message ?? "Failed to delete event");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  const onSubmit = async (data: EventFormValues) => {
-    try {
-      if (editingEvent) {
-        await api.put(`/events/${editingEvent.id}`, data);
-        toast.success("Event updated");
-      } else {
-        await api.post('/events', data);
-        toast.success("Event created");
-      }
-      setIsSheetOpen(false);
-      fetchEvents();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to save event");
-    }
-  };
+  // ── Stats ──
+  const publishedCount = events.filter((e) => e.isPublished).length;
+  const draftCount = events.filter((e) => !e.isPublished).length;
 
-  const columns: ColumnDef<Event>[] = [
-    {
-      header: "Title",
-      accessorKey: "title",
-      sortable: true,
-      cell: (row) => <span className="font-semibold">{row.title}</span>
-    },
-    {
-      header: "Date",
-      accessorKey: "date",
-      sortable: true,
-      cell: (row) => new Date(row.date).toLocaleString()
-    },
-    {
-      header: "RSVPs",
-      accessorKey: "rsvpCount",
-      sortable: true,
-    },
-    {
-      header: "Status",
-      accessorKey: "isPublished",
-      sortable: true,
-      cell: (row) => (
-        <Badge variant={row.isPublished ? 'default' : 'outline'} className={row.isPublished ? "bg-green-500/10 text-green-500" : "text-muted-foreground"}>
-          {row.isPublished ? "Published" : "Draft"}
-        </Badge>
-      )
-    },
-    {
-      header: "Actions",
-      accessorKey: "id",
-      cell: (row) => (
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => openEditForm(row)}>
-            <Edit2 size={16} />
-          </Button>
-          <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-400 hover:bg-red-500/10" onClick={() => handleDelete(row.id)}>
-            <Trash2 size={16} />
-          </Button>
-        </div>
-      )
-    }
-  ];
+  if (authLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="animate-spin text-kavach-cyan" size={28} />
+      </div>
+    );
+  }
+
+  if (!isAdmin) return null;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Events Management</h2>
-          <p className="text-sm text-muted-foreground">Create, edit, and manage upcoming club events.</p>
-        </div>
-        
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetTrigger asChild>
-            <Button onClick={openNewForm} className="bg-kavach-cyan text-black hover:bg-kavach-cyan/90">
-              <Plus className="mr-2" size={16} /> New Event
-            </Button>
-          </SheetTrigger>
-          <SheetContent className="overflow-y-auto sm:max-w-[500px]">
-            <SheetHeader>
-              <SheetTitle>{editingEvent ? "Edit Event" : "Create New Event"}</SheetTitle>
-              <SheetDescription>
-                Fill out the details for the event below.
-              </SheetDescription>
-            </SheetHeader>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Title</label>
-                <Input {...register("title")} placeholder="Intro to Web Exploitation" className="bg-background/50" />
-                {errors.title && <p className="text-xs text-red-500">{errors.title.message}</p>}
+    <>
+      {/* ── Delete Confirm Overlay ────────────────────────────────────────── */}
+      <DeleteConfirmDialog
+        dialog={confirmDialog}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() =>
+          setConfirmDialog({ open: false, eventId: null, eventTitle: "" })
+        }
+        isDeleting={isDeleting}
+      />
+
+      {/* ── Sheet (Create / Edit) ─────────────────────────────────────────── */}
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent
+          className="w-full sm:max-w-[580px] overflow-y-auto bg-[#080d1a] border-l border-white/10 
+            flex flex-col gap-0 p-0"
+        >
+          {/* Sheet Header */}
+          <SheetHeader className="sticky top-0 z-10 bg-[#080d1a]/95 backdrop-blur-md border-b border-white/10 px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-kavach-cyan/10 border border-kavach-cyan/20">
+                <Calendar size={16} className="text-kavach-cyan" />
               </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Description</label>
-                <Input {...register("description")} placeholder="Short summary" className="bg-background/50" />
-                {errors.description && <p className="text-xs text-red-500">{errors.description.message}</p>}
+              <div>
+                <SheetTitle className="text-base font-bold text-[var(--text-primary)]">
+                  {editingEvent ? "Edit Event" : "Create New Event"}
+                </SheetTitle>
+                <SheetDescription className="text-xs text-[var(--text-secondary)] mt-0.5">
+                  {editingEvent
+                    ? `Editing: ${editingEvent.title}`
+                    : "Fill in the details to publish or draft a new event"}
+                </SheetDescription>
               </div>
+            </div>
+          </SheetHeader>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Content</label>
-                <textarea 
-                  {...register("content")} 
-                  placeholder="Full detailed event content (Markdown supported)" 
-                  className="flex min-h-[120px] w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                />
-                {errors.content && <p className="text-xs text-red-500">{errors.content.message}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Date & Time</label>
-                <Input type="datetime-local" {...register("date")} className="bg-background/50 block" />
-                {errors.date && <p className="text-xs text-red-500">{errors.date.message}</p>}
-              </div>
-
-              <div className="flex items-center space-x-2 pt-2">
-                <Checkbox 
-                  id="isOnline" 
-                  checked={isOnline} 
-                  onCheckedChange={(c) => setValue("isOnline", !!c)} 
-                />
-                <label htmlFor="isOnline" className="text-sm font-medium cursor-pointer">Online Event</label>
-              </div>
-
-              {isOnline ? (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Meeting Link</label>
-                  <Input {...register("meetLink")} placeholder="https://meet.google.com/..." className="bg-background/50" />
-                  {errors.meetLink && <p className="text-xs text-red-500">{errors.meetLink.message}</p>}
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Location</label>
-                  <Input {...register("location")} placeholder="Room 402, Block B" className="bg-background/50" />
-                  {errors.location && <p className="text-xs text-red-500">{errors.location.message}</p>}
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Cover Image URL</label>
-                <Input {...register("imageUrl")} placeholder="https://example.com/image.png" className="bg-background/50" />
-                {errors.imageUrl && <p className="text-xs text-red-500">{errors.imageUrl.message}</p>}
-              </div>
-
-              <div className="flex items-center space-x-2 pt-2 pb-4">
-                <Checkbox 
-                  id="isPublished" 
-                  checked={isPublished} 
-                  onCheckedChange={(c) => setValue("isPublished", !!c)} 
-                />
-                <label htmlFor="isPublished" className="text-sm font-medium cursor-pointer">Publish Immediately</label>
-              </div>
-
-              <Button type="submit" className="w-full bg-kavach-violet hover:bg-kavach-violet/90">
-                {editingEvent ? "Save Changes" : "Create Event"}
-              </Button>
-            </form>
-          </SheetContent>
-        </Sheet>
-      </div>
-
-      <div className="bg-background/50 border rounded-xl p-4 backdrop-blur-sm">
-        {isLoading ? (
-          <div className="flex h-32 items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-kavach-cyan"></div>
+          {/* Sheet Body */}
+          <div className="flex-1 px-6 py-5 overflow-y-auto">
+            <EventForm
+              event={editingEvent}
+              onSuccess={handleSheetSuccess}
+              onCancel={handleSheetCancel}
+            />
           </div>
-        ) : (
-          <DataTable 
-            columns={columns} 
-            data={events} 
-            searchKey="title" 
-            searchPlaceholder="Search events..." 
-          />
-        )}
+        </SheetContent>
+      </Sheet>
+
+      {/* ── Page Content ─────────────────────────────────────────────────── */}
+      <div className="space-y-6">
+        {/* ── Header ───────────────────────────────────────────────────────── */}
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-black tracking-tight text-gradient">
+                Events
+              </h1>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-kavach-cyan/10 text-kavach-cyan border border-kavach-cyan/20">
+                {events.length}
+              </span>
+            </div>
+            <p className="text-sm text-[var(--text-secondary)] mt-0.5">
+              Create, schedule, and manage Kavach club events.
+            </p>
+
+            {/* Mini stat row */}
+            <div className="flex items-center gap-4 mt-3">
+              <span className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-kavach-green inline-block" />
+                {publishedCount} published
+              </span>
+              <span className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] inline-block" />
+                {draftCount} drafts
+              </span>
+            </div>
+          </div>
+
+          <Button
+            onClick={openCreateSheet}
+            className="bg-kavach-cyan text-black font-bold hover:bg-kavach-cyan/90 gap-2 flex-shrink-0"
+          >
+            <Plus size={16} />
+            New Event
+          </Button>
+        </div>
+
+        {/* ── Filters Row ──────────────────────────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Search */}
+          <div className="relative flex-1 max-w-xs">
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
+            />
+            <input
+              type="text"
+              id="event-search"
+              placeholder="Search events..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-2 rounded-xl border border-white/10 bg-[#0d1224] 
+                text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]
+                focus:outline-none focus:border-kavach-cyan/30 focus:ring-1 focus:ring-kavach-cyan/10 transition-colors"
+            />
+          </div>
+
+          {/* Status Filter Tabs */}
+          <div className="flex items-center gap-1 bg-[#0d1224] border border-white/10 rounded-xl p-1">
+            {(["all", "published", "draft"] as StatusFilter[]).map((f) => (
+              <button
+                key={f}
+                id={`filter-${f}`}
+                onClick={() => setStatusFilter(f)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
+                  statusFilter === f
+                    ? "bg-kavach-cyan/15 text-kavach-cyan border border-kavach-cyan/20"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5"
+                }`}
+              >
+                {f === "all" ? `All (${events.length})` : null}
+                {f === "published" ? `Published (${publishedCount})` : null}
+                {f === "draft" ? `Drafts (${draftCount})` : null}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Table ────────────────────────────────────────────────────────── */}
+        <div className="rounded-2xl border border-white/5 bg-[#0d1224]/80 backdrop-blur-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/5 bg-white/[0.015]">
+                  <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)] w-[60px]">
+                    Image
+                  </th>
+                  <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)]">
+                    Title
+                  </th>
+                  <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)]">
+                    Date
+                  </th>
+                  <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)]">
+                    Venue
+                  </th>
+                  <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)]">
+                    RSVPs
+                  </th>
+                  <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)]">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)]">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.03]">
+                {isLoading ? (
+                  Array.from({ length: PAGE_SIZE }).map((_, i) => (
+                    <SkeletonRow key={i} />
+                  ))
+                ) : paginated.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="py-20 text-center text-[var(--text-secondary)]"
+                    >
+                      <div className="flex flex-col items-center gap-3">
+                        <Calendar size={40} className="opacity-15" />
+                        <p className="text-sm font-medium">No events found</p>
+                        {searchQuery || statusFilter !== "all" ? (
+                          <p className="text-xs opacity-60">
+                            Try adjusting your search or filters
+                          </p>
+                        ) : (
+                          <Button
+                            onClick={openCreateSheet}
+                            size="sm"
+                            className="mt-2 bg-kavach-cyan/10 text-kavach-cyan border border-kavach-cyan/20 
+                              hover:bg-kavach-cyan/20 text-xs gap-1.5"
+                          >
+                            <Plus size={13} />
+                            Create your first event
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  paginated.map((event) => (
+                    <tr
+                      key={event.id}
+                      className="group hover:bg-white/[0.02] transition-colors"
+                    >
+                      {/* Thumbnail */}
+                      <td className="px-4 py-3">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 bg-white/5 flex-shrink-0 flex items-center justify-center">
+                          {event.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={event.imageUrl}
+                              alt={event.title}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display =
+                                  "none";
+                              }}
+                            />
+                          ) : (
+                            <ImageOff
+                              size={14}
+                              className="text-[var(--text-muted)]"
+                            />
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Title + slug */}
+                      <td className="px-4 py-3 max-w-[220px]">
+                        <p className="font-semibold text-[var(--text-primary)] text-xs truncate">
+                          {event.title}
+                        </p>
+                        {event.slug && (
+                          <p className="text-[10px] text-[var(--text-muted)] font-mono truncate mt-0.5">
+                            /{event.slug}
+                          </p>
+                        )}
+                      </td>
+
+                      {/* Date */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
+                          <Clock size={11} className="flex-shrink-0" />
+                          {formatDate(event.date)}
+                        </div>
+                      </td>
+
+                      {/* Venue */}
+                      <td className="px-4 py-3">
+                        {event.isOnline ? (
+                          <Badge className="bg-kavach-cyan/10 text-kavach-cyan border border-kavach-cyan/20 text-[10px] gap-1 font-semibold">
+                            <Globe size={10} />
+                            Online
+                          </Badge>
+                        ) : (
+                          <span className="flex items-center gap-1 text-[11px] text-[var(--text-secondary)] max-w-[120px] truncate">
+                            <MapPin size={10} className="flex-shrink-0" />
+                            {event.location || "—"}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* RSVPs */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1 text-xs text-[var(--text-secondary)]">
+                          <Users size={11} />
+                          {event.rsvpCount ?? 0}
+                        </div>
+                      </td>
+
+                      {/* Status Toggle */}
+                      <td className="px-4 py-3">
+                        <button
+                          id={`toggle-publish-${event.id}`}
+                          disabled={togglingId === event.id}
+                          onClick={() => handleTogglePublish(event)}
+                          title={
+                            event.isPublished
+                              ? "Click to unpublish"
+                              : "Click to publish"
+                          }
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-semibold
+                            transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                              event.isPublished
+                                ? "bg-kavach-green/10 text-kavach-green border-kavach-green/20 hover:bg-kavach-green/20"
+                                : "bg-white/5 text-[var(--text-secondary)] border-white/10 hover:bg-white/10"
+                            }`}
+                        >
+                          {togglingId === event.id ? (
+                            <Loader2 size={10} className="animate-spin" />
+                          ) : event.isPublished ? (
+                            <>
+                              <ToggleRight size={12} />
+                              Published
+                            </>
+                          ) : (
+                            <>
+                              <ToggleLeft size={12} />
+                              Draft
+                            </>
+                          )}
+                        </button>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
+                          {/* Quick publish/unpublish icon */}
+                          <button
+                            id={`quick-status-${event.id}`}
+                            onClick={() => handleTogglePublish(event)}
+                            disabled={togglingId === event.id}
+                            title={
+                              event.isPublished ? "Unpublish" : "Publish"
+                            }
+                            className={`p-1.5 rounded-lg border transition-all disabled:opacity-40 ${
+                              event.isPublished
+                                ? "border-kavach-green/20 bg-kavach-green/5 text-kavach-green hover:bg-kavach-green/15"
+                                : "border-white/10 bg-white/5 text-[var(--text-secondary)] hover:bg-white/10"
+                            }`}
+                          >
+                            {event.isPublished ? (
+                              <CheckCircle2 size={13} />
+                            ) : (
+                              <XCircle size={13} />
+                            )}
+                          </button>
+
+                          {/* Edit */}
+                          <button
+                            id={`edit-event-${event.id}`}
+                            onClick={() => openEditSheet(event)}
+                            title="Edit event"
+                            className="p-1.5 rounded-lg border border-white/10 bg-white/5 text-[var(--text-secondary)] 
+                              hover:text-kavach-cyan hover:border-kavach-cyan/20 hover:bg-kavach-cyan/5 transition-all"
+                          >
+                            <Edit2 size={13} />
+                          </button>
+
+                          {/* Delete */}
+                          <button
+                            id={`delete-event-${event.id}`}
+                            onClick={() => initiateDelete(event)}
+                            title="Delete event"
+                            className="p-1.5 rounded-lg border border-white/10 bg-white/5 text-[var(--text-secondary)] 
+                              hover:text-red-400 hover:border-red-500/20 hover:bg-red-500/5 transition-all"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ── Pagination ──────────────────────────────────────────────────── */}
+          {!isLoading && filtered.length > PAGE_SIZE && (
+            <div className="flex items-center justify-between px-6 py-3 border-t border-white/5 bg-white/[0.01]">
+              <p className="text-xs text-[var(--text-secondary)]">
+                Showing{" "}
+                <span className="text-[var(--text-primary)] font-medium">
+                  {(currentPage - 1) * PAGE_SIZE + 1}–
+                  {Math.min(currentPage * PAGE_SIZE, filtered.length)}
+                </span>{" "}
+                of{" "}
+                <span className="text-[var(--text-primary)] font-medium">
+                  {filtered.length}
+                </span>{" "}
+                events
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  className="size-7 border border-white/10 hover:bg-white/5 disabled:opacity-30"
+                >
+                  <ChevronLeft size={14} />
+                </Button>
+                <span className="text-xs text-[var(--text-secondary)] min-w-[60px] text-center">
+                  Page {currentPage} / {totalPages}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  disabled={currentPage === totalPages}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  className="size-7 border border-white/10 hover:bg-white/5 disabled:opacity-30"
+                >
+                  <ChevronRight size={14} />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Footer summary ─────────────────────────────────────────────── */}
+          {!isLoading && filtered.length > 0 && filtered.length <= PAGE_SIZE && (
+            <div className="px-6 py-3 border-t border-white/5 bg-white/[0.01]">
+              <p className="text-xs text-[var(--text-secondary)]">
+                {filtered.length} event{filtered.length !== 1 ? "s" : ""}{" "}
+                {statusFilter !== "all"
+                  ? `(${statusFilter})`
+                  : "total"}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

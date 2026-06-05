@@ -9,7 +9,11 @@ export const createEventSchema = z.object({
     endDate: z.string().datetime().optional(),
     location: z.string().optional(),
     isPublished: z.boolean().optional(),
-    capacity: z.number().int().positive().optional()
+    capacity: z.number().int().positive().optional(),
+    isOnline: z.boolean().optional(),
+    meetLink: z.string().optional(),
+    imageUrl: z.string().optional(),
+    slug: z.string().optional(),
   })
 });
 

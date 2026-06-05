@@ -10,6 +10,13 @@ import eventsRoutes from './routes/events.routes';
 import blogRoutes from './routes/blog.routes';
 import usersRoutes from './routes/users.routes';
 import announcementsRoutes from './routes/announcements.routes';
+import progressRoutes from './routes/progress.routes';
+import uploadRoutes from './routes/upload.routes';
+import analyticsRoutes from './routes/analytics.routes';
+import joinRoutes from './routes/join.routes';
+import achievementsRoutes from './routes/achievements.routes';
+import adminRoutes from './routes/admin.routes';
+import contactRoutes from './routes/contact.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -44,6 +51,13 @@ app.use('/api/v1/events', eventsRoutes);
 app.use('/api/v1/blog', blogRoutes);
 app.use('/api/v1/users', usersRoutes);
 app.use('/api/v1/announcements', announcementsRoutes);
+app.use('/api/v1/progress', progressRoutes);
+app.use('/api/v1/upload', uploadRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
+app.use('/api/v1/join', joinRoutes);
+app.use('/api/v1/achievements', achievementsRoutes);
+app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/contact', contactRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', uptime: process.uptime(), version: '1.0.0' });

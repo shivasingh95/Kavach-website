@@ -1,10 +1,10 @@
 # Kavach — College Cybersecurity Club Platform
 
-Welcome to the Kavach Platform repository! This is a multi-portal web platform built with Next.js 14, Express, and PostgreSQL via Prisma.
+Welcome to the Kavach Platform repository! This is a multi-portal web platform built with Next.js 14, Express, and Firebase Firestore.
 
 ## Prerequisites
 - Node.js (v18+)
-- PostgreSQL
+- Firebase Project (with Firestore enabled)
 - Redis (optional for local dev, needed for prod/leaderboard)
 
 ## Setup Instructions
@@ -21,12 +21,11 @@ Welcome to the Kavach Platform repository! This is a multi-portal web platform b
    ```
 
 3. **Database Setup**
-   Ensure PostgreSQL is running and accessible via the `DATABASE_URL` in your `.env`.
-   ```bash
-   cd backend
-   npx prisma generate
-   npx prisma db push
-   ```
+   Ensure you have a Firebase project created and Firestore enabled.
+   Download your Firebase Admin SDK service account key, and fill in the following variables in `.env`:
+   - `FIREBASE_PROJECT_ID`
+   - `FIREBASE_CLIENT_EMAIL`
+   - `FIREBASE_PRIVATE_KEY`
 
 4. **Run Development Server**
    ```bash

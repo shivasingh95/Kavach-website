@@ -19,6 +19,7 @@ export interface User {
   github?: string;
   linkedin?: string;
   isVerified: boolean;
+  isActive: boolean;
   verifyToken?: string;
   resetToken?: string;
   resetExpiry?: Date;
@@ -88,14 +89,41 @@ export interface CTFSubmission {
   reviewedAt?: Date;
 }
 
+export type AchievementCategory = 'CTF' | 'HACKATHON' | 'RESEARCH' | 'COMMUNITY' | 'ACADEMIC' | 'OTHER';
+export type AchievementPosition = '1ST' | '2ND' | '3RD' | 'PARTICIPATION';
+
 export interface Achievement {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   imageUrl?: string;
-  userId: string;
+  category: AchievementCategory;
+  position: AchievementPosition;
+  eventName?: string;
+  userId?: string;
   eventId?: string;
+  achievedAt?: Date;
+  isPublished: boolean;
   createdById: string;
+  createdAt: Date;
+}
+
+export interface JoinRequest {
+  id: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  college: string;
+  yearOfStudy: string;
+  githubUrl?: string;
+  linkedinUrl?: string;
+  whyJoin: string;
+  experienceLevel: string;
+  skills: string[];
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
+  reviewNote?: string;
+  reviewedById?: string;
+  reviewedAt?: Date;
   createdAt: Date;
 }
 

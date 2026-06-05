@@ -54,6 +54,15 @@ router.put(
   eventsController.updateEvent
 );
 
+router.patch(
+  '/:id',
+  requireAuth,
+  rbac('ADMIN'),
+  validate(updateEventSchema),
+  auditLog('UPDATE_EVENT', 'event'),
+  eventsController.updateEvent
+);
+
 router.delete(
   '/:id',
   requireAuth,

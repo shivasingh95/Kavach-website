@@ -7,14 +7,18 @@
     "backend"
   ],
   "scripts": {
-    "dev": "npm run dev --workspaces",
-    "build": "npm run build --workspaces",
-    "lint": "npm run lint --workspaces",
+    "dev": "npm-run-all2 --parallel dev:frontend dev:backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "dev:backend": "npm run dev -w backend",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
     "prepare": "husky install"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",
     "@commitlint/config-conventional": "^19.0.0",
-    "husky": "^9.0.11"
+    "husky": "^9.0.11",
+    "npm-run-all2": "^6.2.3"
   }
 }

@@ -17,9 +17,20 @@ export const createEvent = async (req: Request, res: Response, next: NextFunctio
 
 export const getAllEvents = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // If admin, they can see unpublished events too
     const isAdmin = req.user?.role === 'ADMIN';
-    const events = await eventsService.getAllEvents(isAdmin);
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
+    
+    // Properly handle undefined vs true/false strings
+    const upcoming = req.query.upcoming !== undefined ? req.query.upcoming === 'true' : undefined;
+    const published = req.query.published !== undefined ? req.query.published === 'true' : undefined;
+
+    const events = await eventsService.getAllEvents({
+      includeUnpublished: isAdmin,
+      limit,
+      upcoming,
+      published,
+    });
+    
     res.status(200).json({
       success: true,
       data: { events, total: events.length },

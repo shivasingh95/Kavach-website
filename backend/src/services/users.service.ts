@@ -92,3 +92,26 @@ export const getUserProfile = async (
 
   return toPublicUser(fromFirestore(doc.data()!) as User);
 };
+
+// ─── Toggle User Active (Admin) ─────────────────────────────────────────────
+
+export const toggleUserActive = async (userId: string): Promise<boolean> => {
+  const doc = await db.collection('users').doc(userId).get();
+  if (!doc.exists) throw new Error('User not found');
+  
+  const currentStatus = doc.data()?.isActive ?? true;
+  await db.collection('users').doc(userId).update({
+    isActive: !currentStatus,
+    updatedAt: new Date()
+  });
+  
+  logger.info(`User active status toggled: ${userId} -> ${!currentStatus}`);
+  return !currentStatus;
+};
+
+// ─── Delete User (Admin) ────────────────────────────────────────────────────
+
+export const deleteUser = async (userId: string): Promise<void> => {
+  await db.collection('users').doc(userId).delete();
+  logger.info(`User deleted: ${userId}`);
+};

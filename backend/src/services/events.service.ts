@@ -19,7 +19,7 @@ const fromFirestore = (data: FirebaseFirestore.DocumentData): any => {
 };
 
 const generateSlug = async (title: string): Promise<string> => {
-  let baseSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const baseSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   let slug = baseSlug;
   let counter = 1;
   let isUnique = false;
@@ -82,20 +82,48 @@ export const createEvent = async (
 // ─── Get All Events ─────────────────────────────────────────────────────────
 
 export const getAllEvents = async (
-  includeUnpublished: boolean = false
+  filters?: {
+    includeUnpublished?: boolean;
+    limit?: number;
+    upcoming?: boolean;
+    published?: boolean;
+  }
 ): Promise<Event[]> => {
-  let query: FirebaseFirestore.Query = db.collection('events');
+  // Fetch all events to bypass Firestore composite indexing requirements for combinations
+  // of date inequalities, published booleans, and ordering.
+  const snapshot = await db.collection('events').get();
+  let results = snapshot.docs.map((doc) => fromFirestore(doc.data()) as Event);
 
-  if (!includeUnpublished) {
-    query = query.where('isPublished', '==', true);
+  const now = new Date().getTime();
+
+  // 1. Filter by upcoming/past and sort appropriately
+  if (filters?.upcoming !== undefined) {
+    if (filters.upcoming) {
+      results = results.filter(e => e.date.getTime() >= now);
+      // Sort ascending (soonest first)
+      results.sort((a, b) => a.date.getTime() - b.date.getTime());
+    } else {
+      // past events
+      results = results.filter(e => e.date.getTime() < now);
+      // Sort descending (most recent past first)
+      results.sort((a, b) => b.date.getTime() - a.date.getTime());
+    }
+  } else {
+    // If neither, just sort by date descending
+    results.sort((a, b) => b.date.getTime() - a.date.getTime());
   }
 
-  const snapshot = await query.get();
+  // 2. Filter by isPublished status
+  if (!filters?.includeUnpublished || filters.published) {
+    results = results.filter(e => e.isPublished === true);
+  }
 
-  const results = snapshot.docs.map((doc) => fromFirestore(doc.data()) as Event);
+  // 3. Apply limit
+  if (filters?.limit) {
+    results = results.slice(0, filters.limit);
+  }
   
-  // Sort in-memory to avoid Firebase composite index requirement
-  return results.sort((a, b) => b.date.getTime() - a.date.getTime());
+  return results;
 };
 
 // ─── Get Event By Slug ──────────────────────────────────────────────────────

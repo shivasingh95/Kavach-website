@@ -55,6 +55,7 @@ export const registerUser = async (
     passwordHash,
     role: 'PUBLIC',
     isVerified: false,
+    isActive: true,
     totalPoints: 0,
     createdAt: now,
     updatedAt: now,

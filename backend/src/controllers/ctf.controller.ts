@@ -18,7 +18,13 @@ export const createChallenge = async (req: Request, res: Response, next: NextFun
 export const getAllChallenges = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const isAdmin = req.user?.role === 'ADMIN';
-    const challenges = await ctfService.getAllChallenges(isAdmin);
+    const activeOnly = req.query.active === 'true';
+    
+    // If activeOnly is true, we don't include inactive.
+    // If isAdmin is true and activeOnly is not true, we include inactive.
+    const includeInactive = isAdmin && !activeOnly;
+    
+    const challenges = await ctfService.getAllChallenges(includeInactive);
     res.status(200).json({
       success: true,
       data: { challenges, total: challenges.length },

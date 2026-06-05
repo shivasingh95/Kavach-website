@@ -5,16 +5,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
 const navLinks = [
-  { label: "Home", href: "#hero" },
-  { label: "Features", href: "#features" },
-  { label: "CTF", href: "#ctf" },
-  { label: "Events", href: "#events" },
-  { label: "Team", href: "#team" },
+  { label: "Home", href: "/" },
+  { label: "CTF", href: "/ctf" },
+  { label: "Events", href: "/events" },
+  { label: "Blog", href: "/blog" },
+  { label: "Contact", href: "/contact" },
 ];
+
+import { useAuth } from "@/lib/AuthContext";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { isAuthenticated, isAdmin } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -68,27 +71,45 @@ export default function Navbar() {
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.href}
               href={link.href}
               className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-kavach-cyan transition-colors duration-300 rounded-lg hover:bg-kavach-cyan/5"
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </div>
 
         {/* Auth Buttons */}
         <div className="hidden md:flex items-center gap-3">
-          <Link
-            href="/login"
-            className="px-5 py-2.5 text-sm font-medium text-kavach-cyan border border-kavach-cyan/20 rounded-xl hover:bg-kavach-cyan/5 hover:border-kavach-cyan/40 transition-all duration-300"
-          >
-            Login
-          </Link>
-          <Link href="/register" className="btn-primary !py-2.5 !px-5 !text-sm">
-            Join Kavach
-          </Link>
+          {isAuthenticated ? (
+            <>
+              {isAdmin && (
+                <Link
+                  href="/dashboard/admin"
+                  className="px-5 py-2.5 text-sm font-medium text-kavach-cyan border border-kavach-cyan/20 rounded-xl hover:bg-kavach-cyan/5 hover:border-kavach-cyan/40 transition-all duration-300"
+                >
+                  Admin Panel
+                </Link>
+              )}
+              <Link href="/dashboard" className="btn-primary !py-2.5 !px-5 !text-sm">
+                Dashboard
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="px-5 py-2.5 text-sm font-medium text-kavach-cyan border border-kavach-cyan/20 rounded-xl hover:bg-kavach-cyan/5 hover:border-kavach-cyan/40 transition-all duration-300"
+              >
+                Login
+              </Link>
+              <Link href="/register" className="btn-primary !py-2.5 !px-5 !text-sm">
+                Join Kavach
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Hamburger */}
@@ -125,22 +146,37 @@ export default function Navbar() {
           >
             <div className="container-section py-6 space-y-1">
               {navLinks.map((link) => (
-                <a
+                <Link
                   key={link.href}
                   href={link.href}
                   className="block px-4 py-3 text-sm font-medium text-[var(--text-secondary)] hover:text-kavach-cyan hover:bg-kavach-cyan/5 rounded-lg transition-all"
                   onClick={() => setMobileOpen(false)}
                 >
                   {link.label}
-                </a>
+                </Link>
               ))}
               <div className="pt-4 flex flex-col gap-3">
-                <Link href="/login" className="btn-secondary text-center text-sm">
-                  Login
-                </Link>
-                <Link href="/register" className="btn-primary text-center text-sm">
-                  Join Kavach
-                </Link>
+                {isAuthenticated ? (
+                  <>
+                    {isAdmin && (
+                      <Link href="/dashboard/admin" className="btn-secondary text-center text-sm">
+                        Admin Panel
+                      </Link>
+                    )}
+                    <Link href="/dashboard" className="btn-primary text-center text-sm">
+                      Dashboard
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login" className="btn-secondary text-center text-sm">
+                      Login
+                    </Link>
+                    <Link href="/register" className="btn-primary text-center text-sm">
+                      Join Kavach
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>

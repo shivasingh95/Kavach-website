@@ -3,6 +3,7 @@ import { createId } from '@paralleldrive/cuid2';
 import { db } from '../utils/firebase-admin';
 import { logger } from '../utils/logger';
 import type { CTFChallenge, CTFSubmission } from '../types/models';
+import * as progressService from './progress.service';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -182,28 +183,23 @@ export const submitFlag = async (
   await db.collection('ctfSubmissions').doc(submissionId).set(submission);
 
   if (isCorrect) {
-    // Use a transaction to atomically update solve count and user points
-    await db.runTransaction(async (transaction) => {
-      const userRef = db.collection('users').doc(userId);
-      const challengeRef = db.collection('ctfChallenges').doc(challengeId);
+    // Delegate all progress tracking (points, leaderboard, activity log) to progressService
+    try {
+      await progressService.recordCTFSolve(userId, {
+        id: challenge.id,
+        title: challenge.title,
+        category: challenge.category,
+        difficulty: challenge.difficulty,
+        points: challenge.points,
+      });
+    } catch (progressErr) {
+      // Non-critical: log but do not fail the flag submission
+      logger.error(`Failed to record progress for user ${userId}: ${progressErr}`);
+    }
 
-      const userDoc = await transaction.get(userRef);
-      const chalDoc = await transaction.get(challengeRef);
-
-      if (userDoc.exists) {
-        const currentPoints = userDoc.data()?.totalPoints || 0;
-        transaction.update(userRef, {
-          totalPoints: currentPoints + challenge.points,
-          updatedAt: new Date(),
-        });
-      }
-
-      if (chalDoc.exists) {
-        const currentSolves = chalDoc.data()?.solveCount || 0;
-        transaction.update(challengeRef, {
-          solveCount: currentSolves + 1,
-        });
-      }
+    // Still atomically increment challenge solve count
+    await db.collection('ctfChallenges').doc(challengeId).update({
+      solveCount: (challenge.solveCount || 0) + 1,
     });
 
     logger.info(`User ${userId} solved challenge ${challengeId} (+${challenge.points} pts)`);
@@ -315,23 +311,23 @@ export const reviewSubmission = async (
       reviewedAt: new Date(),
     });
 
-    // If approved, award points to the user
+    // If approved, award points and record progress via progressService
     if (data.status === 'APPROVED') {
       const challengeRef = db.collection('ctfChallenges').doc(submission.challengeId);
       const chalDoc = await transaction.get(challengeRef);
-      
+
       if (chalDoc.exists) {
-        const challenge = chalDoc.data() as CTFChallenge;
-        const userRef = db.collection('users').doc(submission.userId);
-        const userDoc = await transaction.get(userRef);
-        
-        if (userDoc.exists) {
-          const currentPoints = userDoc.data()?.totalPoints || 0;
-          transaction.update(userRef, {
-            totalPoints: currentPoints + challenge.points,
-            updatedAt: new Date()
-          });
-        }
+        const challenge = fromFirestore(chalDoc.data()!) as CTFChallenge;
+        // Non-transactional progress record (spawned after transaction resolves)
+        // We set a flag for post-transaction action
+        transaction.update(submissionRef, { _approvalTriggered: true });
+
+        // Still atomically increment solve count
+        const currentSolves = chalDoc.data()?.solveCount || 0;
+        transaction.update(challengeRef, { solveCount: currentSolves + 1 });
+
+        // Store challenge ref data for post-transaction use
+        (transaction as any).__challengeForProgress = challenge;
       }
     }
   });

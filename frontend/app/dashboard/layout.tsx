@@ -1,16 +1,17 @@
 "use client";
 
 import { useAuth } from "@/lib/AuthContext";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Flag, Calendar, User, Newspaper, BookOpen, Trophy } from "lucide-react";
+import { LayoutDashboard, Flag, Calendar, User, Newspaper, BookOpen, Trophy, LogOut } from "lucide-react";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isAdmin, logout } = useAuth();
+  const router = useRouter();
   const pathname = usePathname();
 
   if (isLoading) {
@@ -21,13 +22,16 @@ export default function DashboardLayout({
     );
   }
 
-  // We rely on page-level protection or middleware, but basic client check:
-  if (!isAuthenticated && !isLoading) {
-    // Should ideally be handled by middleware or page component, 
-    // but layout renders first on client if hydrating.
-    // We can just return null and let the page component handle redirect
-    return null;
+  // Auth resolved and no user — redirect to login immediately
+  if (!isAuthenticated) {
+    router.replace("/login");
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-kavach-cyan border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
   }
+
 
   const navItems = [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
@@ -37,6 +41,11 @@ export default function DashboardLayout({
     { name: "100 Days of Hacking", href: "/dashboard/100-days", icon: BookOpen },
     { name: "Profile", href: "/dashboard/profile", icon: User },
   ];
+
+  if (isAdmin) {
+    // Add Admin Panel link at the bottom of the list or near the top
+    navItems.push({ name: "Admin Panel", href: "/dashboard/admin", icon: LayoutDashboard });
+  }
 
   return (
     <div className="min-h-screen pt-20 flex flex-col md:flex-row relative z-10">
@@ -67,6 +76,17 @@ export default function DashboardLayout({
             })}
           </nav>
         </div>
+        
+        {/* Logout Button */}
+        <div className="mt-auto p-6 border-t border-white/5">
+          <button
+            onClick={() => logout()}
+            className="flex items-center gap-3 w-full px-4 py-3 rounded-xl transition-all duration-300 text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-transparent"
+          >
+            <LogOut size={18} />
+            <span className="font-medium">Sign Out</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main Content Area */}
@@ -94,6 +114,13 @@ export default function DashboardLayout({
             </Link>
           );
         })}
+        <button
+          onClick={() => logout()}
+          className="flex flex-col items-center p-2 rounded-lg transition-colors text-red-400"
+        >
+          <LogOut size={20} className="mb-1 opacity-80" />
+          <span className="text-[10px] font-medium">Sign Out</span>
+        </button>
       </nav>
     </div>
   );

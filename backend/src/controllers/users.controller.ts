@@ -51,3 +51,27 @@ export const getUserProfile = async (req: Request, res: Response, next: NextFunc
     next(error);
   }
 };
+
+export const toggleActive = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (req.params.id === req.user!.id) {
+        return res.status(400).json({ success: false, error: 'Cannot toggle your own active status', statusCode: 400 });
+    }
+    const newStatus = await usersService.toggleUserActive(req.params.id);
+    res.status(200).json({ success: true, message: `User active status set to ${newStatus}`, data: { isActive: newStatus } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (req.params.id === req.user!.id) {
+        return res.status(400).json({ success: false, error: 'Cannot delete yourself', statusCode: 400 });
+    }
+    await usersService.deleteUser(req.params.id);
+    res.status(200).json({ success: true, message: 'User deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
