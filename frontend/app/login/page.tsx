@@ -60,7 +60,11 @@ function LoginContent() {
       
       setSuccess(true);
       setTimeout(() => {
-        router.push("/dashboard"); // Redirect to dashboard or home
+        if (user.role === 'ADMIN') {
+          router.push("/dashboard/admin");
+        } else {
+          router.push("/dashboard");
+        }
       }, 1000);
     } catch (error: any) {
       setServerError(error.response?.data?.message || "Invalid email or password");
