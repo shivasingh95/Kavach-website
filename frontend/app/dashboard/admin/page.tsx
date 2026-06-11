@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Users,
@@ -24,6 +24,7 @@ import {
   AlertCircle,
   Loader2,
   ShieldCheck,
+  MessageSquare,
 } from "lucide-react";
 import {
   AreaChart,
@@ -49,6 +50,7 @@ interface DashboardData {
   pendingSubmissions: number;
   totalBlogPosts: number;
   totalAchievements: number;
+  unreadMessages: number;
   recentJoinRequests: JoinRequest[];
   submissionsThisWeek: Submission[];
   userGrowth: UserGrowthPoint[];
@@ -57,9 +59,12 @@ interface DashboardData {
 interface JoinRequest {
   id: string;
   name: string;
+  fullName?: string;
   email: string;
-  year: string;
-  branch: string;
+  year?: string;
+  yearOfStudy?: string;
+  branch?: string;
+  college?: string;
   appliedAt: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
 }
@@ -143,6 +148,7 @@ interface StatCardProps {
   badge?: number;
   badgeColor?: string;
   trend?: string;
+  href?: string;
 }
 
 function StatCard({
@@ -154,11 +160,12 @@ function StatCard({
   badge,
   badgeColor = "bg-red-500",
   trend,
+  href,
 }: StatCardProps) {
-  return (
+  const cardContent = (
     <div
       className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#0d1224]/80 backdrop-blur-sm p-5 
-      transition-all duration-300 hover:border-white/10 hover:-translate-y-0.5 group"
+      transition-all duration-300 hover:border-white/10 hover:-translate-y-0.5 group h-full"
       style={{ boxShadow: `0 4px 24px ${glowColor}15` }}
     >
       {/* Ambient glow */}
@@ -198,17 +205,25 @@ function StatCard({
         </p>
 
         {trend && (
-          <p className="text-xs text-[var(--text-secondary)] mt-2 flex items-center gap-1">
-            <TrendingUp size={11} className="text-kavach-green" />
+          <p className="text-xs text-[var(--text-secondary)] mt-2 flex items-center gap-1 group-hover:text-[var(--text-primary)] transition-colors">
+            {href ? <ArrowRight size={11} className="text-kavach-cyan" /> : <TrendingUp size={11} className="text-kavach-green" />}
             {trend}
           </p>
         )}
       </div>
     </div>
   );
-}
 
-// ─── Skeleton Loader ──────────────────────────────────────────────────────────
+  if (href) {
+    return (
+      <Link href={href} className="block h-full group">
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return cardContent;
+}
 
 function SkeletonCard() {
   return (
@@ -252,137 +267,18 @@ export default function AdminOverviewPage() {
       const res = await api.get("/analytics/dashboard");
       setData(res.data?.data ?? res.data);
     } catch {
-      // Graceful fallback with mock data
+      toast.error("Failed to load dashboard data. Ensure backend is running.");
       setData({
-        totalUsers: 247,
-        totalEvents: 12,
-        totalChallenges: 38,
-        pendingSubmissions: 7,
-        totalBlogPosts: 24,
-        totalAchievements: 156,
-        recentJoinRequests: [
-          {
-            id: "jr1",
-            name: "Aryan Sharma",
-            email: "aryan@example.com",
-            year: "3rd",
-            branch: "CSE",
-            appliedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-            status: "PENDING",
-          },
-          {
-            id: "jr2",
-            name: "Priya Mehta",
-            email: "priya@example.com",
-            year: "2nd",
-            branch: "IT",
-            appliedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-            status: "PENDING",
-          },
-          {
-            id: "jr3",
-            name: "Rohan Das",
-            email: "rohan@example.com",
-            year: "4th",
-            branch: "ECE",
-            appliedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-            status: "PENDING",
-          },
-          {
-            id: "jr4",
-            name: "Sneha Kapoor",
-            email: "sneha@example.com",
-            year: "1st",
-            branch: "CSE",
-            appliedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-            status: "PENDING",
-          },
-          {
-            id: "jr5",
-            name: "Vikram Nair",
-            email: "vikram@example.com",
-            year: "3rd",
-            branch: "EE",
-            appliedAt: new Date(
-              Date.now() - 30 * 60 * 60 * 1000
-            ).toISOString(),
-            status: "PENDING",
-          },
-        ],
-        submissionsThisWeek: [
-          {
-            id: "s1",
-            user: { id: "u1", name: "Aarav Singh", email: "aarav@example.com" },
-            challenge: {
-              id: "c1",
-              title: "SQL Injection 101",
-              category: "Web",
-            },
-            submittedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-            status: "PENDING",
-          },
-          {
-            id: "s2",
-            user: {
-              id: "u2",
-              name: "Meera Joshi",
-              email: "meera@example.com",
-            },
-            challenge: {
-              id: "c2",
-              title: "RSA Decrypt Challenge",
-              category: "Crypto",
-            },
-            submittedAt: new Date(
-              Date.now() - 2 * 60 * 60 * 1000
-            ).toISOString(),
-            status: "PENDING",
-          },
-          {
-            id: "s3",
-            user: { id: "u3", name: "Kabir Rao", email: "kabir@example.com" },
-            challenge: {
-              id: "c3",
-              title: "Hidden in Plain Sight",
-              category: "Forensics",
-            },
-            submittedAt: new Date(
-              Date.now() - 4 * 60 * 60 * 1000
-            ).toISOString(),
-            status: "PENDING",
-          },
-          {
-            id: "s4",
-            user: { id: "u4", name: "Tara Patel", email: "tara@example.com" },
-            challenge: {
-              id: "c4",
-              title: "Buffer Overflow Basics",
-              category: "Pwn",
-            },
-            submittedAt: new Date(
-              Date.now() - 6 * 60 * 60 * 1000
-            ).toISOString(),
-            status: "PENDING",
-          },
-          {
-            id: "s5",
-            user: {
-              id: "u5",
-              name: "Dev Sharma",
-              email: "dev@example.com",
-            },
-            challenge: {
-              id: "c5",
-              title: "XSS Attack Vector",
-              category: "Web",
-            },
-            submittedAt: new Date(
-              Date.now() - 8 * 60 * 60 * 1000
-            ).toISOString(),
-            status: "PENDING",
-          },
-        ],
-        userGrowth: generateUserGrowthFallback(),
+        totalUsers: 0,
+        totalEvents: 0,
+        totalChallenges: 0,
+        pendingSubmissions: 0,
+        totalBlogPosts: 0,
+        totalAchievements: 0,
+        unreadMessages: 0,
+        recentJoinRequests: [],
+        submissionsThisWeek: [],
+        userGrowth: [],
       });
     } finally {
       setIsLoading(false);
@@ -492,6 +388,7 @@ export default function AdminOverviewPage() {
           color="#00f0ff"
           glowColor="#00f0ff"
           trend="All registered members"
+          href="/dashboard/admin/users"
         />
         <StatCard
           title="Active Events"
@@ -500,6 +397,7 @@ export default function AdminOverviewPage() {
           color="#7c3aed"
           glowColor="#7c3aed"
           trend="Ongoing &amp; upcoming"
+          href="/dashboard/admin/events"
         />
         <StatCard
           title="CTF Challenges"
@@ -508,6 +406,7 @@ export default function AdminOverviewPage() {
           color="#06d6a0"
           glowColor="#06d6a0"
           trend="Published challenges"
+          href="/dashboard/admin/ctf"
         />
         <StatCard
           title="Pending Reviews"
@@ -518,6 +417,18 @@ export default function AdminOverviewPage() {
           badge={pending > 0 ? pending : undefined}
           badgeColor="bg-red-500"
           trend={pending > 0 ? "Needs attention!" : "All clear"}
+          href="/dashboard/admin/ctf"
+        />
+        <StatCard
+          title="Unread Messages"
+          value={data?.unreadMessages ?? 0}
+          icon={MessageSquare}
+          color={(data?.unreadMessages ?? 0) > 0 ? "#00f0ff" : "#06d6a0"}
+          glowColor={(data?.unreadMessages ?? 0) > 0 ? "#00f0ff" : "#06d6a0"}
+          badge={(data?.unreadMessages ?? 0) > 0 ? data?.unreadMessages : undefined}
+          badgeColor="bg-cyan-500"
+          trend="Contact form queries"
+          href="/dashboard/admin/messages"
         />
         <StatCard
           title="Blog Posts"
@@ -526,6 +437,7 @@ export default function AdminOverviewPage() {
           color="#f59e0b"
           glowColor="#f59e0b"
           trend="Published articles"
+          href="/dashboard/admin/blog"
         />
         <StatCard
           title="Join Requests"
@@ -886,14 +798,14 @@ export default function AdminOverviewPage() {
                   {/* Avatar */}
                   <div className="w-9 h-9 rounded-full bg-kavach-violet/10 border border-kavach-violet/20 flex items-center justify-center flex-shrink-0">
                     <span className="text-sm font-bold text-kavach-violet">
-                      {req.name.charAt(0).toUpperCase()}
+                      {(req.fullName || "?").charAt(0).toUpperCase()}
                     </span>
                   </div>
 
                   {/* Info */}
                   <div className="min-w-0">
                     <p className="text-xs font-semibold text-[var(--text-primary)] truncate">
-                      {req.name}
+                      {req.fullName || "Unknown"}
                     </p>
                     <p className="text-[10px] text-[var(--text-secondary)] truncate">
                       {req.email}
@@ -904,10 +816,10 @@ export default function AdminOverviewPage() {
                 {/* Meta tags */}
                 <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
                   <span className="text-[10px] bg-white/5 border border-white/10 text-[var(--text-secondary)] px-2 py-0.5 rounded-md">
-                    Year {req.year}
+                    Year {req.yearOfStudy || "-"}
                   </span>
                   <span className="text-[10px] bg-white/5 border border-white/10 text-[var(--text-secondary)] px-2 py-0.5 rounded-md">
-                    {req.branch}
+                    {req.college || "-"}
                   </span>
                 </div>
 

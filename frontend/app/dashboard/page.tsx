@@ -139,7 +139,7 @@ export default function DashboardPage() {
       const [progressRes, challengesRes, eventsRes, announcementsRes] = await Promise.allSettled([
         api.get("/progress/me"),
         api.get("/ctf/challenges?active=true&unsolved=true&limit=3"),
-        api.get("/events?upcoming=true&limit=2"),
+        api.get("/events?limit=2"),
         api.get("/announcements?pinned=true&limit=1"),
       ]);
       if (progressRes.status === "fulfilled") {
@@ -270,7 +270,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-[#7c3aed]/10 border border-[#7c3aed]/20"><Calendar size={13} className="text-[#7c3aed]" /></div>
-                <h2 className="text-sm font-bold text-[var(--text-primary)]">Upcoming Events</h2>
+                <h2 className="text-sm font-bold text-[var(--text-primary)]">Recent Events</h2>
               </div>
               <Link href="/dashboard/events" className="text-[11px] text-kavach-cyan hover:text-kavach-cyan/80 flex items-center gap-0.5 transition-colors">
                 All <ChevronRight size={12} />
@@ -279,7 +279,7 @@ export default function DashboardPage() {
             {events.length === 0 ? (
               <div className="py-8 text-center">
                 <Calendar size={28} className="mx-auto opacity-15 mb-2" />
-                <p className="text-sm text-[var(--text-secondary)]">No upcoming events scheduled.</p>
+                <p className="text-sm text-[var(--text-secondary)]">No recent events found.</p>
               </div>
             ) : (
               <div className="space-y-2">

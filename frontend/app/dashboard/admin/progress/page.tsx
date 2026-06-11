@@ -85,7 +85,7 @@ function RankBadge({ rank }: { rank: number }) {
 // USER PROGRESS SHEET
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function UserProgressSheet({ userId, onClose }: { userId: string | null; onClose: () => void }) {
+function UserProgressSheet({ userId, onClose }: { userId: string | null; onClose: () => void }) {
   const [detail, setDetail] = useState<UserDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [markingEvent, setMarkingEvent] = useState<string | null>(null);

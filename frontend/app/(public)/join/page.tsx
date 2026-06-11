@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import ContactForm from '../contact/ContactForm';
+import JoinForm from './JoinForm';
 import { Terminal, Shield, Code, Target } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -70,7 +70,7 @@ export default function JoinPage() {
             <p className="text-gray-400 mb-8 relative z-10 text-sm">Fill out this form and tell us why you want to join.</p>
             
             <div className="relative z-10">
-              <ContactForm defaultSubject="Membership Application - [Your Name]" />
+              <JoinForm />
             </div>
           </div>
 

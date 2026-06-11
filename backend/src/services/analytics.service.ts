@@ -29,7 +29,8 @@ export const getDashboardStats = async () => {
     submissionsSnap,
     blogsSnap,
     achievementsSnap,
-    joinRequestsSnap
+    joinRequestsSnap,
+    contactsSnap
   ] = await Promise.all([
     db.collection('users').count().get(),
     db.collection('events').count().get(),
@@ -38,6 +39,7 @@ export const getDashboardStats = async () => {
     db.collection('blogs').count().get(),
     db.collection('achievements').count().get(),
     db.collection('joinRequests').orderBy('createdAt', 'desc').limit(5).get(),
+    db.collection('contacts').where('status', '==', 'NEW').count().get(),
   ]);
 
   const totalUsers = usersSnap.data().count;
@@ -46,6 +48,7 @@ export const getDashboardStats = async () => {
   const pendingSubmissions = submissionsSnap.data().count;
   const totalBlogPosts = blogsSnap.data().count;
   const totalAchievements = achievementsSnap.data().count;
+  const unreadMessages = contactsSnap.data().count;
 
   const recentJoinRequests = joinRequestsSnap.docs.map(doc => ({
     id: doc.id,
@@ -70,17 +73,11 @@ export const getDashboardStats = async () => {
   }));
 
   // userGrowth: mock data or calculate based on users' createdAt.
-  // To avoid fetching all users, we'll return a 30-day mock or perform an aggregate if supported.
-  // Firestore doesn't easily support group by day natively without fetching all or using a separate stats collection.
-  // We'll generate a dummy 30 day growth array based on total users for the frontend.
-  const userGrowth = Array.from({ length: 30 }).map((_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (29 - i));
-    return {
-      date: d.toISOString().split('T')[0],
-      users: Math.floor(totalUsers * (i / 30)) + Math.floor(Math.random() * 5)
-    };
-  });
+  // In a production app, user growth should be tracked in a separate daily-aggregated stats collection.
+  // For efficiency, we will not fetch all users to calculate this dynamically.
+  const userGrowth = [
+    { date: new Date().toISOString().split('T')[0], count: totalUsers }
+  ];
 
   return {
     totalUsers,
@@ -89,6 +86,7 @@ export const getDashboardStats = async () => {
     pendingSubmissions,
     totalBlogPosts,
     totalAchievements,
+    unreadMessages,
     recentJoinRequests,
     submissionsThisWeek,
     userGrowth

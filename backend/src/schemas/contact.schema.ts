@@ -4,7 +4,7 @@ export const contactSchema = z.object({
   body: z.object({
     name: z.string().min(2),
     email: z.string().email(),
-    subject: z.enum(['General', 'CTF Help', 'Partnership', 'Other']),
+    subject: z.string().min(5),
     message: z.string().min(20)
   })
 });

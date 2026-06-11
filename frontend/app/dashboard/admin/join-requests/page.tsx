@@ -19,10 +19,10 @@ type JoinStatus = "PENDING" | "ACCEPTED" | "REJECTED";
 
 interface JoinRequest {
   id: string;
-  name: string;
+  fullName: string;
   email: string;
-  year?: string;
-  branch?: string;
+  yearOfStudy?: string;
+  college?: string;
   whyJoin?: string;
   experience?: string;
   skills?: string[];
@@ -78,7 +78,7 @@ function AcceptDialog({ req, onConfirm, onClose, isLoading }: {
           <div>
             <h3 className="text-sm font-bold text-[var(--text-primary)]">Accept Application?</h3>
             <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
-              Accept <span className="font-semibold text-[var(--text-primary)]">{req.name}</span>? A Member account will be created and they'll receive a welcome email with their login link.
+              Accept <span className="font-semibold text-[var(--text-primary)]">{req.fullName}</span>? A Member account will be created and they'll receive a welcome email with their login link.
             </p>
           </div>
         </div>
@@ -112,7 +112,7 @@ function RejectDialog({ req, onConfirm, onClose, isLoading }: {
           </div>
           <div>
             <h3 className="text-sm font-bold text-[var(--text-primary)]">Reject Application</h3>
-            <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">A rejection email will be sent to <span className="font-semibold text-[var(--text-primary)]">{req.name}</span>.</p>
+            <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">A rejection email will be sent to <span className="font-semibold text-[var(--text-primary)]">{req.fullName}</span>.</p>
           </div>
         </div>
         <div className="space-y-1.5">
@@ -160,12 +160,12 @@ function JoinRequestRow({
         </td>
         {/* Name + email */}
         <td className="px-4 py-3">
-          <p className="text-xs font-semibold text-[var(--text-primary)]">{req.name}</p>
+          <p className="text-xs font-semibold text-[var(--text-primary)]">{req.fullName}</p>
           <p className="text-[10px] text-[var(--text-secondary)]">{req.email}</p>
         </td>
-        {/* Year + Branch */}
+        {/* Year + College */}
         <td className="px-4 py-3 text-[11px] text-[var(--text-secondary)]">
-          {[req.year, req.branch].filter(Boolean).join(" • ") || "—"}
+          {[req.yearOfStudy, req.college].filter(Boolean).join(" • ") || "—"}
         </td>
         {/* Applied */}
         <td className="px-4 py-3 text-[11px] text-[var(--text-secondary)] whitespace-nowrap">{timeAgo(req.createdAt)}</td>
@@ -265,7 +265,8 @@ export default function AdminJoinRequestsPage() {
     setIsLoading(true);
     try {
       const res = await api.get("/join");
-      setRequests(res.data?.data?.requests ?? res.data?.requests ?? []);
+      // res.data.data is the array of requests directly
+      setRequests(Array.isArray(res.data?.data) ? res.data.data : []);
     } catch (err: any) { toast.error(err.response?.data?.message ?? "Failed to load requests"); }
     finally { setIsLoading(false); }
   }, []);
@@ -277,7 +278,7 @@ export default function AdminJoinRequestsPage() {
     let data = filter === "ALL" ? requests : requests.filter(r => r.status === filter);
     if (search.trim()) {
       const q = search.toLowerCase();
-      data = data.filter(r => r.name.toLowerCase().includes(q) || r.email.toLowerCase().includes(q) || r.branch?.toLowerCase().includes(q));
+      data = data.filter(r => r.fullName?.toLowerCase().includes(q) || r.email?.toLowerCase().includes(q) || r.college?.toLowerCase().includes(q));
     }
     return data;
   }, [requests, filter, search]);
@@ -298,7 +299,7 @@ export default function AdminJoinRequestsPage() {
     setProcessingId(req.id);
     try {
       await api.patch(`/join/${req.id}`, { status: "ACCEPTED" });
-      toast.success(`${req.name} accepted! Member account created.`);
+      toast.success(`${req.fullName} accepted! Member account created.`);
       setRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: "ACCEPTED" } : r));
       setAcceptTarget(null);
     } catch (err: any) { toast.error(err.response?.data?.message ?? "Failed to accept"); }
@@ -309,7 +310,7 @@ export default function AdminJoinRequestsPage() {
     setProcessingId(req.id);
     try {
       await api.patch(`/join/${req.id}`, { status: "REJECTED", reviewNote: note || undefined });
-      toast.success(`${req.name}'s application rejected`);
+      toast.success(`${req.fullName}'s application rejected`);
       setRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: "REJECTED", reviewNote: note } : r));
       setRejectTarget(null);
     } catch (err: any) { toast.error(err.response?.data?.message ?? "Failed to reject"); }
@@ -357,7 +358,7 @@ export default function AdminJoinRequestsPage() {
         {/* Header */}
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-black tracking-tight text-[var(--text-primary)] [background:var(--gradient-accent)] [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">Join Requests</h1>
+            <h1 className="text-2xl font-black tracking-tight text-gradient">Join Requests</h1>
             {counts.pending > 0 && <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse">{counts.pending} pending</span>}
           </div>
           <p className="text-sm text-[var(--text-secondary)] mt-0.5">Review membership applications and manage club recruitment.</p>

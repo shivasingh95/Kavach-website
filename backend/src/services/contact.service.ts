@@ -20,3 +20,40 @@ export const submitContact = async (data: {
   logger.info(`New contact message received from ${data.email} (${id})`);
   return contactDoc;
 };
+
+export const getAllContacts = async () => {
+  const snapshot = await db.collection('contacts').orderBy('createdAt', 'desc').get();
+  return snapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      ...data,
+      createdAt: data.createdAt?.toDate() || new Date(),
+    };
+  });
+};
+
+export const updateContactStatus = async (id: string, status: string) => {
+  const contactRef = db.collection('contacts').doc(id);
+  const doc = await contactRef.get();
+  
+  if (!doc.exists) {
+    throw new Error('Contact message not found');
+  }
+
+  await contactRef.update({ status });
+  logger.info(`Contact message ${id} status updated to ${status}`);
+  return { id, status };
+};
+
+export const deleteContact = async (id: string) => {
+  const contactRef = db.collection('contacts').doc(id);
+  const doc = await contactRef.get();
+  
+  if (!doc.exists) {
+    throw new Error('Contact message not found');
+  }
+
+  await contactRef.delete();
+  logger.info(`Contact message ${id} deleted`);
+  return { id };
+};
