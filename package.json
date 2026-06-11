@@ -12,8 +12,7 @@
     "dev:backend": "npm run dev -w backend",
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present",
-    "prepare": "husky install || true"
+    "lint": "npm run lint --workspaces --if-present"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",
