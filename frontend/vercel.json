@@ -1,11 +1,4 @@
 {
-  "version": 2,
-  "name": "kavach-web",
-  "rootDirectory": "frontend",
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "framework": "nextjs",
-  "outputDirectory": ".next",
   "headers": [
     {
       "source": "/(.*)",
