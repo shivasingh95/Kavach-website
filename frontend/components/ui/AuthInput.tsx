@@ -3,16 +3,19 @@
 import { InputHTMLAttributes, forwardRef, useState } from "react";
 import { UseFormRegisterReturn } from "react-hook-form";
 import { motion } from "framer-motion";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Check } from "lucide-react";
+import { LucideIcon } from "lucide-react";
 
 interface AuthInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
   error?: string;
   registration?: UseFormRegisterReturn;
+  icon?: LucideIcon;
+  isValid?: boolean;
 }
 
 export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
-  ({ label, error, type = "text", registration, className = "", ...props }, ref) => {
+  ({ label, error, type = "text", registration, icon: Icon, isValid, className = "", ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
 
@@ -32,6 +35,15 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
           />
           
           <div className="relative">
+            {/* Left icon */}
+            {Icon && (
+              <div className={`absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors duration-200 ${
+                isFocused ? "text-kavach-cyan" : "text-white/30"
+              }`}>
+                <Icon size={16} strokeWidth={1.5} />
+              </div>
+            )}
+
             <input
               {...props}
               {...registration}
@@ -50,11 +62,18 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
                 registration?.onBlur?.(e);
                 props.onBlur?.(e);
               }}
-              className={`w-full px-4 py-3 bg-[#0a0f1c]/80 border border-kavach-cyan/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-kavach-cyan/60 transition-colors backdrop-blur-sm ${
+              className={`w-full py-3 bg-[#0a0f1c]/80 border border-kavach-cyan/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-kavach-cyan/60 transition-all duration-200 backdrop-blur-sm ${
+                Icon ? "pl-10 pr-4" : "px-4"
+              } ${
                 isPassword ? "pr-12" : ""
-              } ${error ? "border-red-500/50 focus:border-red-500" : ""} ${className}`}
+              } ${
+                error ? "border-red-500/50 focus:border-red-500" : ""
+              } ${
+                isValid && !error ? "border-green-500/40" : ""
+              } ${className}`}
             />
             
+            {/* Password toggle */}
             {isPassword && (
               <button
                 type="button"
@@ -64,6 +83,19 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
+            )}
+
+            {/* Valid checkmark (non-password fields) */}
+            {isValid && !error && !isPassword && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+              >
+                <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <Check size={12} className="text-green-400" />
+                </div>
+              </motion.div>
             )}
           </div>
         </div>

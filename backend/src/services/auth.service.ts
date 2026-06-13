@@ -163,3 +163,77 @@ export const refreshAccessToken = async (
     throw Object.assign(new Error('Invalid refresh token'), { statusCode: 401 });
   }
 };
+
+// ─── Google OAuth ────────────────────────────────────────────────────────────
+
+export const loginOrCreateGoogleUser = async (
+  idToken: string,
+  ip: string,
+  userAgent: string
+): Promise<{ user: PublicUser; accessToken: string; refreshToken: string }> => {
+  // Verify the Firebase ID token
+  const admin = (await import('../utils/firebase-admin')).default;
+  const decodedToken = await admin.auth().verifyIdToken(idToken);
+
+  const email = decodedToken.email;
+  const name = decodedToken.name || decodedToken.email?.split('@')[0] || 'User';
+
+  if (!email) {
+    throw Object.assign(new Error('Google account has no email associated'), { statusCode: 400 });
+  }
+
+  // Check if user already exists
+  const existing = await db
+    .collection('users')
+    .where('email', '==', email)
+    .limit(1)
+    .get();
+
+  let user: User;
+
+  if (!existing.empty) {
+    // Existing user — log them in
+    user = fromFirestore(existing.docs[0].data()) as User;
+  } else {
+    // New user — create account (no password needed for Google users)
+    const id = createId();
+    const now = new Date();
+    const randomHash = await bcrypt.hash(createId(), 12); // Random unusable password
+
+    user = {
+      id,
+      email,
+      name,
+      passwordHash: randomHash,
+      role: 'PUBLIC',
+      isVerified: true, // Google accounts are pre-verified
+      isActive: true,
+      totalPoints: 0,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await db.collection('users').doc(id).set(user);
+  }
+
+  // Generate tokens
+  const accessToken = signAccessToken(user.id, user.role);
+  const refreshToken = signRefreshToken(user.id);
+
+  const tokenId = createId();
+  const tokenDoc: RefreshToken = {
+    id: tokenId,
+    userId: user.id,
+    token: refreshToken,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    isRevoked: false,
+    ipAddress: ip,
+    userAgent,
+    createdAt: new Date(),
+  };
+
+  await db.collection('refreshTokens').doc(tokenId).set(tokenDoc);
+
+  return { user: toPublicUser(user), accessToken, refreshToken };
+};
+

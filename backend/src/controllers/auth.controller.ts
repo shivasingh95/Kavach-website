@@ -90,3 +90,37 @@ export const refreshTokenHandler = async (req: Request, res: Response, next: Nex
     next(error);
   }
 };
+
+export const googleLogin = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      return res.status(400).json({ success: false, error: 'ID token is required', statusCode: 400 });
+    }
+
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    const userAgent = req.headers['user-agent'] || 'unknown';
+
+    const { user, accessToken, refreshToken } = await authService.loginOrCreateGoogleUser(idToken, ip, userAgent);
+
+    // Set HTTP-only cookie for refresh token
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    logger.info(`User logged in via Google: ${user.email}`);
+
+    res.status(200).json({
+      success: true,
+      data: { user, accessToken },
+      message: 'Google login successful'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
