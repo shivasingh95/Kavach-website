@@ -12,6 +12,7 @@ const navLinks = [
   { label: "Events", href: "/events" },
   { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
+  { label: "Mail Us", href: "mailto:kavachclub@gmail.com" },
 ];
 
 export default function Navbar() {
@@ -60,7 +61,7 @@ export default function Navbar() {
     >
       <div className="container-section flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 group" aria-label="Kavach Home">
+    <Link href="/" className="flex items-center gap-3 group" aria-label="K.A.V.A.C.H. Home">
           <div className="relative">
             <svg width="36" height="36" viewBox="0 0 80 80" fill="none" aria-hidden="true">
               <path
@@ -85,9 +86,9 @@ export default function Navbar() {
             </svg>
             <div className="absolute inset-0 bg-kavach-cyan/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </div>
-          <span className="text-xl font-bold tracking-wider">
-            <span className="text-gradient">KAVACH</span>
-          </span>
+<span className="text-xl font-bold tracking-wider">
+  <span className="text-gradient">K.A.V.A.C.H.</span>
+</span>
         </Link>
 
         {/* Desktop Links */}
@@ -139,9 +140,9 @@ export default function Navbar() {
               >
                 Login
               </Link>
-              <Link href="/register" className="btn-primary !py-2.5 !px-5 !text-sm">
-                Join Kavach
-              </Link>
+          <Link href="/register" className="btn-primary !py-2.5 !px-5 !text-sm">
+  Join K.A.V.A.C.H.
+</Link>
             </>
           )}
         </div>

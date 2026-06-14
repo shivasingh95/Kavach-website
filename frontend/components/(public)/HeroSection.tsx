@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-const TYPING_TEXT = "We hack. We defend. We innovate.";
+const TYPING_TEXT = "LEARN · INNOVATE · SECURE THE FUTURE";
 
 export default function HeroSection() {
   const [typedText, setTypedText] = useState("");
@@ -64,10 +64,10 @@ export default function HeroSection() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-white tracking-tight"
           >
-            Kavach Cybersecurity Club
-            <span className="block text-2xl md:text-3xl text-gray-400 mt-4 font-normal">
+            K.A.V.A.C.H. Cybersecurity Club
+            {/* <span className="block text-2xl md:text-3xl text-gray-400 mt-4 font-normal">
               Indian Institute of Information Technology
-            </span>
+            </span> */}
           </motion.h1>
 
           <motion.p 
@@ -76,7 +76,8 @@ export default function HeroSection() {
             transition={{ duration: 0.8, delay: 0.4 }}
             className="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto"
           >
-            Join a community of ethical hackers, security researchers, and developers pushing the boundaries of cybersecurity.
+        Knights of Advanced Vigilance, Attack Prevention,
+Cybersecurity, and Hardening.
           </motion.p>
 
           <motion.div 

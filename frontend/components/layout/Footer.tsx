@@ -34,6 +34,15 @@ const socialLinks = [
     ),
   },
   {
+  label: "LinkedIn",
+  href: "https://www.linkedin.com/kavach-vit-bhopal/",
+  icon: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.11 1 2.5 1 4.98 2.12 4.98 3.5zM0 8h5v16H0V8zm7.5 0h4.8v2.2h.1c.67-1.27 2.3-2.6 4.74-2.6 5.06 0 6 3.33 6 7.66V24h-5v-7.6c0-1.8-.03-4.13-2.52-4.13-2.53 0-2.92 1.97-2.92 4v7.73h-5V8z"/>
+    </svg>
+  ),
+},
+  {
     label: "Discord",
     href: "https://discord.gg/kavach",
     icon: (
@@ -42,6 +51,15 @@ const socialLinks = [
       </svg>
     ),
   },
+  {
+  label: "Instagram",
+  href: "https://instagram.com/YOUR_INSTAGRAM_HANDLE",
+  icon: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M7.75 2C4.57 2 2 4.57 2 7.75v8.5C2 19.43 4.57 22 7.75 22h8.5C19.43 22 22 19.43 22 16.25v-8.5C22 4.57 19.43 2 16.25 2h-8.5zm0 2h8.5A3.75 3.75 0 0 1 20 7.75v8.5A3.75 3.75 0 0 1 16.25 20h-8.5A3.75 3.75 0 0 1 4 16.25v-8.5A3.75 3.75 0 0 1 7.75 4zm8.75 1a1.25 1.25 0 1 0 0 2.5A1.25 1.25 0 0 0 16.5 5zM12 7a5 5 0 1 0 0 10a5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6a3 3 0 0 1 0-6z" />
+    </svg>
+  ),
+},
   {
     label: "Twitter / X",
     href: "https://twitter.com/kavachclub",
@@ -76,12 +94,13 @@ export default function Footer() {
                   </linearGradient>
                 </defs>
               </svg>
-              <span className="text-lg font-bold tracking-wider text-gradient">KAVACH</span>
+             <span className="text-lg font-bold tracking-wider text-gradient">K.A.V.A.C.H.</span>
             </Link>
-            <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-sm mb-6">
-              The premier college cybersecurity club. We defend, learn, and hack — together.
-              Building the next generation of security professionals.
-            </p>
+<p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-sm mb-6">
+  K.A.V.A.C.H. (Knights of Advanced Vigilance, Attack Prevention,
+  Cybersecurity, and Hardening) is a cybersecurity community dedicated to
+  learning, innovation, attack prevention, and securing the future.
+</p>
             {/* Social Icons */}
             <div className="flex gap-3">
               {socialLinks.map((social) => (
@@ -90,7 +109,7 @@ export default function Footer() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={`Kavach on ${social.label}`}
+               aria-label={`K.A.V.A.C.H. on ${social.label}`}
                   className="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-[var(--text-muted)] hover:text-kavach-cyan hover:border-kavach-cyan/20 hover:bg-kavach-cyan/5 transition-all duration-300"
                 >
                   {social.icon}
@@ -124,10 +143,10 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="mt-14 pt-8 border-t border-white/[0.04] flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-[var(--text-muted)]">
-            © {new Date().getFullYear()} Kavach Cybersecurity Club. All rights reserved.
+            © {new Date().getFullYear()} K.A.V.A.C.H Cybersecurity Club. All rights reserved.
           </p>
           <p className="text-xs text-[var(--text-muted)]">
-            Built with 🛡️ by the <span className="text-kavach-cyan font-medium">Kavach</span> dev team
+        Built with 🛡️ by the <span className="text-kavach-cyan font-medium">K.A.V.A.C.H.</span> dev team
           </p>
         </div>
       </div>

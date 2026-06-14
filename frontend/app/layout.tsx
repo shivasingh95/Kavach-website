@@ -17,26 +17,36 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "Kavach — Cybersecurity Club | Defend. Learn. Hack.",
-    template: "%s | Kavach",
+    default: "K.A.V.A.C.H. — Cybersecurity Club | Defend. Learn. Hack.",
+     template: "%s | K.A.V.A.C.H.",
   },
-  description:
-    "Kavach is a premier college cybersecurity club. Join CTF competitions, attend workshops, and level up your security skills with our community of ethical hackers.",
-  keywords: ["cybersecurity", "CTF", "ethical hacking", "college club", "Kavach", "security", "IIIT", "penetration testing"],
-  authors: [{ name: "Kavach Cybersecurity Club" }],
-  creator: "Kavach Cybersecurity Club",
+ description:
+  "Knights of Advanced Vigilance, Attack Prevention, Cybersecurity, and Hardening. LEARN · INNOVATE · SECURE THE FUTURE.",
+keywords: [
+  "K.A.V.A.C.H.",
+  "cybersecurity",
+  "ethical hacking",
+  "CTF",
+  "attack prevention",
+  "digital security",
+  "penetration testing"
+],
+  authors: [{ name: "K.A.V.A.C.H. Cybersecurity Club" }],
+  creator: "K.A.V.A.C.H. Cybersecurity Club",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "Kavach — Cybersecurity Club",
-    description: "Defend. Learn. Hack. Join the premier college cybersecurity community.",
+    title: "K.A.V.A.C.H. — Cybersecurity Club",
+description:
+  "Knights of Advanced Vigilance, Attack Prevention, Cybersecurity, and Hardening.",
     type: "website",
-    siteName: "Kavach",
+  siteName: "K.A.V.A.C.H.",
     locale: "en_IN",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Kavach — Cybersecurity Club",
-    description: "Defend. Learn. Hack. Join the premier college cybersecurity community.",
+    title: "K.A.V.A.C.H. — Cybersecurity Club",
+ description:
+  "LEARN · INNOVATE · SECURE THE FUTURE",
   },
 };
 
