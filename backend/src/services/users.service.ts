@@ -63,25 +63,44 @@ export const updateUserRole = async (
 
 export const getAllUsers = async (
   page: number = 1,
-  limit: number = 20
+  limit: number = 20,
+  role?: string
 ): Promise<{ users: PublicUser[]; totalPages: number; currentPage: number }> => {
-  const countSnapshot = await db.collection('users').count().get();
+
+  let countQuery: FirebaseFirestore.Query = db.collection('users');
+
+  if (role) {
+    countQuery = countQuery.where('role', '==', role);
+  }
+
+  const countSnapshot = await countQuery.count().get();
   const total = countSnapshot.data().count;
   const totalPages = Math.ceil(total / limit);
 
   const offset = (page - 1) * limit;
 
-  const snapshot = await db.collection('users')
+  let query: FirebaseFirestore.Query = db.collection('users');
+
+  if (role) {
+    query = query.where('role', '==', role);
+  }
+
+  const snapshot = await query
     .orderBy('createdAt', 'desc')
     .offset(offset)
     .limit(limit)
     .get();
 
-  const users = snapshot.docs.map(doc => toPublicUser(fromFirestore(doc.data()) as User));
+  const users = snapshot.docs.map(doc =>
+    toPublicUser(fromFirestore(doc.data()) as User)
+  );
 
-  return { users, totalPages, currentPage: page };
+  return {
+    users,
+    totalPages,
+    currentPage: page,
+  };
 };
-
 // ─── Get User Profile By ID ─────────────────────────────────────────────────
 
 export const getUserProfile = async (
