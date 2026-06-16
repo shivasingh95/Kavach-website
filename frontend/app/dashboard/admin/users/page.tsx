@@ -385,9 +385,7 @@ export default function AdminUsersPage() {
         {/* Header */}
         <div>
           <div className="flex items-center gap-3">
-<h1 className="text-2xl font-black tracking-tight text-kavach-cyan">
-  Users
-</h1>
+            <h1 className="text-2xl font-black tracking-tight text-[var(--text-primary)] [background:var(--gradient-accent)] [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">Users</h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-kavach-cyan/10 text-kavach-cyan border border-kavach-cyan/20">{total}</span>
           </div>
           <p className="text-sm text-[var(--text-secondary)] mt-0.5">Manage member roles, active status, and accounts.</p>
