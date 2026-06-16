@@ -93,7 +93,11 @@ function LoginContent() {
       login(accessToken, user);
       handleRedirect(user);
     } catch (error: any) {
-      triggerError(error.response?.data?.message || "Invalid email or password");
+  triggerError(
+    error.response?.data?.error ||
+    error.response?.data?.message ||
+    "Invalid email or password"
+  );
     } finally {
       setIsSubmitting(false);
     }
@@ -116,9 +120,12 @@ function LoginContent() {
       handleRedirect(user);
     } catch (error: any) {
       if (error.code === "auth/popup-closed-by-user") return;
-      triggerError(
-        error.response?.data?.message || error.message || "Google sign-in failed. Please try again."
-      );
+triggerError(
+  error.response?.data?.error ||
+  error.response?.data?.message ||
+  error.message ||
+  "Google sign-in failed. Please try again."
+);
     } finally {
       setIsGoogleLoading(false);
     }
