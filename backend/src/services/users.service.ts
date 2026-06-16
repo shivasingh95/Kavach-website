@@ -64,39 +64,36 @@ export const updateUserRole = async (
 export const getAllUsers = async (
   page: number = 1,
   limit: number = 20,
-  role?: string
-): Promise<{ users: PublicUser[]; totalPages: number; currentPage: number }> => {
-
-  let countQuery: FirebaseFirestore.Query = db.collection('users');
-
-  if (role) {
-    countQuery = countQuery.where('role', '==', role);
-  }
-
-  const countSnapshot = await countQuery.count().get();
-  const total = countSnapshot.data().count;
-  const totalPages = Math.ceil(total / limit);
-
-  const offset = (page - 1) * limit;
-
+  role?: Role,
+  search?: string
+): Promise<{ users: PublicUser[]; total: number; totalPages: number; currentPage: number }> => {
   let query: FirebaseFirestore.Query = db.collection('users');
 
   if (role) {
     query = query.where('role', '==', role);
   }
 
-  const snapshot = await query
-    .orderBy('createdAt', 'desc')
-    .offset(offset)
-    .limit(limit)
-    .get();
+  // Sorting a role-filtered query in Firestore requires a composite index.
+  // Filter first, then sort and paginate here so the admin filters work in
+  // every environment without an undeclared deployment dependency.
+  const snapshot = await query.get();
+  const normalizedSearch = search?.trim().toLowerCase();
 
-  const users = snapshot.docs.map(doc =>
-    toPublicUser(fromFirestore(doc.data()) as User)
-  );
+  const matchingUsers = snapshot.docs
+    .map(doc => ({ ...fromFirestore(doc.data()), id: doc.id }) as User)
+    .filter(user => !normalizedSearch
+      || user.name?.toLowerCase().includes(normalizedSearch)
+      || user.email?.toLowerCase().includes(normalizedSearch))
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+  const total = matchingUsers.length;
+  const totalPages = Math.ceil(total / limit);
+  const offset = (page - 1) * limit;
+  const users = matchingUsers.slice(offset, offset + limit).map(toPublicUser);
 
   return {
     users,
+    total,
     totalPages,
     currentPage: page,
   };

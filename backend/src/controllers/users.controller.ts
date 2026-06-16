@@ -33,13 +33,24 @@ export const getAllUsers = async (req: Request, res: Response, next: NextFunctio
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
 
-    const result = await usersService.getAllUsers(page, limit);
-    res.status(200).json({ success: true, data: result });
+    const role = req.query.role as 'ADMIN' | 'MEMBER' | 'PUBLIC' | undefined;
+    const search = req.query.search as string | undefined;
+
+    const result = await usersService.getAllUsers(
+      page,
+      limit,
+      role,
+      search
+    );
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
   } catch (error) {
     next(error);
   }
 };
-
 export const getUserProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = await usersService.getUserProfile(req.params.id);
