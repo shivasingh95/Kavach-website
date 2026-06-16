@@ -85,6 +85,12 @@ export const loginUser = async (
 
   const userDoc = snapshot.docs[0];
   const user = fromFirestore(userDoc.data()) as User;
+  if (!user.isActive) {
+  throw Object.assign(
+    new Error('Your account has been deactivated. Please contact an administrator.'),
+    { statusCode: 403 }
+  );
+}
 
   const passwordMatch = await bcrypt.compare(data.password, user.passwordHash);
   if (!passwordMatch) {

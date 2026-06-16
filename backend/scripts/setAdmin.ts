@@ -2,10 +2,10 @@ import * as dotenv from 'dotenv';
 import path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-import { db } from '../src/utils/firebase-admin';
-import * as authService from '../src/services/auth.service';
-
 async function setAdmin() {
+  const { db } = await import('../src/utils/firebase-admin');
+  const authService = await import('../src/services/auth.service');
+
   const email = 'admin@gmail.com';
   
   const snapshot = await db.collection('users').where('email', '==', email).limit(1).get();

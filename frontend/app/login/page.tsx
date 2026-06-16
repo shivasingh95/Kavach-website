@@ -93,7 +93,11 @@ function LoginContent() {
       login(accessToken, user);
       handleRedirect(user);
     } catch (error: any) {
-      triggerError(error.response?.data?.message || "Invalid email or password");
+  triggerError(
+    error.response?.data?.error ||
+    error.response?.data?.message ||
+    "Invalid email or password"
+  );
     } finally {
       setIsSubmitting(false);
     }
@@ -116,9 +120,12 @@ function LoginContent() {
       handleRedirect(user);
     } catch (error: any) {
       if (error.code === "auth/popup-closed-by-user") return;
-      triggerError(
-        error.response?.data?.message || error.message || "Google sign-in failed. Please try again."
-      );
+triggerError(
+  error.response?.data?.error ||
+  error.response?.data?.message ||
+  error.message ||
+  "Google sign-in failed. Please try again."
+);
     } finally {
       setIsGoogleLoading(false);
     }
@@ -165,15 +172,25 @@ function LoginContent() {
             initial="hidden"
             animate="visible"
           >
-            {/* Header */}
-            <motion.div variants={itemVariants} className="mb-8">
-              <h1 className="text-3xl font-bold mb-2">
-                Welcome <span className="text-gradient">Back</span>
-              </h1>
-              <p className="text-[var(--text-secondary)] text-sm">
-                Log in to access your Kavach dashboard.
-              </p>
-            </motion.div>
+ {/* Header */}
+<motion.div variants={itemVariants} className="mb-8">
+
+  <Link
+    href="/"
+    className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-lg border border-kavach-cyan/20 text-kavach-cyan hover:bg-kavach-cyan/10 transition-all"
+  >
+    ← Home
+  </Link>
+
+  <h1 className="text-3xl font-bold mb-2">
+    Welcome <span className="text-gradient">Back</span>
+  </h1>
+
+  <p className="text-[var(--text-secondary)] text-sm">
+    Log in to access your Kavach dashboard.
+  </p>
+
+</motion.div>
 
             {/* Registration success banner */}
             {justRegistered && (

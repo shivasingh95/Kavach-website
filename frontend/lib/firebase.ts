@@ -30,3 +30,4 @@ export const signInWithGoogle = async (): Promise<string> => {
 };
 
 export { app, auth };
+
