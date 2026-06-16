@@ -5,7 +5,7 @@ import StatsCounter from '@/components/(public)/StatsCounter';
 import EventCard from '@/components/(public)/EventCard';
 import BlogCard from '@/components/(public)/BlogCard';
 
-export const revalidate = 3600; // ISR revalidate every 1 hour
+export const revalidate = 0; // Disable caching to show admin updates immediately
 
 export const metadata: Metadata = {
   title: 'Kavach — Cybersecurity Club | Defend. Learn. Hack.',
@@ -21,7 +21,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL + '/api/v1';
 
 async function fetchStats() {
   try {
-    const res = await fetch(`${API_BASE}/analytics/public`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API_BASE}/analytics/public`, { cache: 'no-store' });
     if (!res.ok) return { members: 0, challenges: 0, events: 0, achievements: 0 };
     const json = await res.json();
     return json.data;
@@ -32,7 +32,7 @@ async function fetchStats() {
 
 async function fetchFeaturedEvents() {
   try {
-    const res = await fetch(`${API_BASE}/events?limit=3&upcoming=true&published=true`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API_BASE}/events?limit=3&upcoming=true&published=true`, { cache: 'no-store' });
     if (!res.ok) return [];
     const json = await res.json();
     return json.data.events;
@@ -43,7 +43,7 @@ async function fetchFeaturedEvents() {
 
 async function fetchLeaderboard() {
   try {
-    const res = await fetch(`${API_BASE}/ctf/leaderboard?limit=5`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API_BASE}/ctf/leaderboard?limit=5`, { cache: 'no-store' });
     if (!res.ok) return [];
     const json = await res.json();
     return json.data.leaderboard;
@@ -54,7 +54,7 @@ async function fetchLeaderboard() {
 
 async function fetchLatestBlogs() {
   try {
-    const res = await fetch(`${API_BASE}/blog?limit=3&published=true`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API_BASE}/blog?limit=3&published=true`, { cache: 'no-store' });
     if (!res.ok) return [];
     const json = await res.json();
     return json.data.posts;
