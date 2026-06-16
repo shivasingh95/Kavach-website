@@ -47,7 +47,7 @@ export default function CTASection() {
               </svg>
               Join Kavach Today
             </a>
-            <a href="mailto:kavachclub@gmail.com" className="btn-secondary text-base">
+            <a href="mailto:thakurshivasinghraghuwanshi@gmail.com" className="btn-secondary text-base">
               Contact Us
             </a>
           </div>

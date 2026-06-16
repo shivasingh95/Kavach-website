@@ -12,7 +12,7 @@ const navLinks = [
   { label: "Events", href: "/events" },
   { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
-  { label: "Mail Us", href: "mailto:kavachclub@gmail.com" },
+  { label: "Mail Us", href: "mailto:thakurshivasinghraghuwanshi@gmail.com" },
 ];
 
 export default function Navbar() {
