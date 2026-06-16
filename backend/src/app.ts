@@ -20,17 +20,34 @@ import contactRoutes from './routes/contact.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Security Middleware
 app.use(helmet({
   contentSecurityPolicy: true,
   strictTransportSecurity: true,
   xFrameOptions: { action: 'deny' },
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
 // CORS Configuration
+const allowedOrigins = [
+  'http://localhost:3000',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      // In development, you might want to allow all origins temporarily
+      // callback(null, true); 
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 
