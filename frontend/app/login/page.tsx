@@ -134,7 +134,7 @@ triggerError(
   return (
     <AuthPageWrapper
       backgroundTitle="Defend the Digital Frontier"
-      backgroundSubtitle="Join Kavach — the cybersecurity community building the next generation of security professionals through hands-on challenges and real-world learning."
+      backgroundSubtitle="Join K.A.V.A.C.H. — the cybersecurity community building the next generation of security professionals through hands-on challenges and real-world learning."
     >
       <AnimatePresence mode="wait">
         {success ? (
@@ -187,7 +187,7 @@ triggerError(
   </h1>
 
   <p className="text-[var(--text-secondary)] text-sm">
-    Log in to access your Kavach dashboard.
+   Log in to access your K.A.V.A.C.H. dashboard.
   </p>
 
 </motion.div>
@@ -329,7 +329,7 @@ triggerError(
                 href="/register"
                 className="text-kavach-cyan hover:text-white transition-colors font-medium"
               >
-                Join Kavach
+                Join K.A.V.A.C.H.
               </Link>
             </motion.div>
           </motion.div>

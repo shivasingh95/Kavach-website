@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search } from "lucide-react";
 import BlogCard from "@/components/(public)/BlogCard";
 
@@ -37,7 +37,9 @@ export default function BlogList({ initialPosts }: { initialPosts: any[] }) {
   }, [filteredPosts, currentPage]);
 
   // Reset to page 1 on filter change
-  useMemo(() => setCurrentPage(1), [activeCategory, searchQuery]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory, searchQuery]);
 
   return (
     <div>

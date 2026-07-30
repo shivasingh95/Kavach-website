@@ -5,13 +5,13 @@ import { ArrowLeft, Clock, Calendar } from 'lucide-react';
 import MarkdownRenderer from '@/components/(public)/MarkdownRenderer';
 import ReadingProgressBar from './ReadingProgressBar';
 
-export const revalidate = 3600;
+export const revalidate = 0;
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL + '/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 async function fetchPost(slug: string) {
   try {
-    const res = await fetch(`${API_BASE}/blog/${slug}`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API_BASE}/blog/${slug}`, { cache: 'no-store' });
     if (!res.ok) return null;
     const json = await res.json();
     return json.data.post;
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   if (!post) return { title: 'Post Not Found' };
 
   return {
-    title: `${post.title} — Kavach Blog`,
+    title: `${post.title} — K.A.V.A.C.H. Blog`,
     description: post.excerpt,
     openGraph: {
       title: post.title,

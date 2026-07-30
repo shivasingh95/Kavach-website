@@ -1,15 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getFirestore, collection, doc, getDocs, setDoc, Timestamp, deleteDoc } from "firebase/firestore";
-import { app } from "@/lib/firebase";
+import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
+import { hackingChallenges } from "@/lib/100-days-data";
 
 export function use100DaysProgress() {
   const [progress, setProgress] = useState<Record<number, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
-  const db = getFirestore(app);
 
   useEffect(() => {
     if (!user) {
@@ -21,17 +20,13 @@ export function use100DaysProgress() {
     const fetchProgress = async () => {
       setIsLoading(true);
       try {
-        const progressRef = collection(db, `users/${user.id}/progress`);
-        const snapshot = await getDocs(progressRef);
+        const res = await api.get("/progress/me");
+        const days: Array<{ dayNumber: number }> = res.data?.data?.days ?? [];
+
         const newProgress: Record<number, boolean> = {};
-        
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          if (data.completed) {
-            newProgress[parseInt(docSnap.id)] = true;
-          }
-        });
-        
+        for (const day of days) {
+          newProgress[day.dayNumber] = true;
+        }
         setProgress(newProgress);
       } catch (error) {
         console.error("Error fetching 100 days progress:", error);
@@ -41,7 +36,7 @@ export function use100DaysProgress() {
     };
 
     fetchProgress();
-  }, [user, db]);
+  }, [user]);
 
   const toggleChallenge = async (challengeId: number) => {
     if (!user) return;
@@ -49,28 +44,23 @@ export function use100DaysProgress() {
     // Optimistic UI update
     const isCurrentlyCompleted = !!progress[challengeId];
     const newProgress = { ...progress };
-    
+
     if (isCurrentlyCompleted) {
       delete newProgress[challengeId];
     } else {
       newProgress[challengeId] = true;
     }
-    
+
     setProgress(newProgress);
 
-    // Sync to Firestore
+    // Sync to backend API — PATCH /api/v1/progress/days/:dayNumber
     try {
-      const docRef = doc(db, `users/${user.id}/progress`, challengeId.toString());
-      if (isCurrentlyCompleted) {
-        await deleteDoc(docRef); // If toggling off, remove the document
-      } else {
-        await setDoc(docRef, {
-          completed: true,
-          completedAt: Timestamp.now()
-        });
-      }
+      const challenge = hackingChallenges.find((c) => c.id === challengeId);
+      const roomName = challenge?.title ?? `Day ${challengeId}`;
+
+      await api.patch(`/progress/days/${challengeId}`, { roomName });
     } catch (error) {
-      console.error("Error updating progress in Firestore:", error);
+      console.error("Error updating progress:", error);
       // Revert on failure
       setProgress(progress);
     }

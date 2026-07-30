@@ -6,7 +6,7 @@ const team = [
   {
     name: "Shiva Raghuwanshi",
     role: "Team Lead",
-    bio: "Full-stack developer & security researcher. Building Kavach from the ground up.",
+    bio: "Full-stack developer & security researcher. Building K.A.V.A.C.H. from the ground up.",
     initials: "SR",
     gradient: "from-[#00f0ff] to-[#7c3aed]",
   },
@@ -52,7 +52,7 @@ export default function TeamSection() {
             Meet the <span className="text-gradient">Core Team</span>
           </h2>
           <p className="section-subtitle mx-auto mt-4">
-            The minds behind Kavach. Passionate about security, driven by curiosity.
+            The minds behind K.A.V.A.C.H. Passionate about security, driven by curiosity.
           </p>
         </motion.div>
 

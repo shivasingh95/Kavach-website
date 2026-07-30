@@ -17,3 +17,12 @@ export const updateProfileSchema = z.object({
     linkedin: z.string().url().optional().or(z.literal(''))
   })
 });
+
+export const createUserSchema = z.object({
+  body: z.object({
+    name: z.string().min(2, 'Name must be at least 2 characters'),
+    email: z.string().email('Invalid email address'),
+    role: z.enum(['ADMIN', 'MEMBER', 'PUBLIC']).optional().default('MEMBER'),
+  })
+});
+

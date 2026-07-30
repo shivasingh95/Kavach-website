@@ -3,8 +3,8 @@ import JoinForm from './JoinForm';
 import { Terminal, Shield, Code, Target } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Join Us — Kavach Cybersecurity Club',
-  description: 'Apply to join the Kavach Cybersecurity Club and start your journey in ethical hacking.',
+  title: 'Join Us — K.A.V.A.C.H. Cybersecurity Club',
+  description: 'Apply to join the K.A.V.A.C.H. Cybersecurity Club and start your journey in ethical hacking.',
 };
 
 export default function JoinPage() {
@@ -57,7 +57,7 @@ export default function JoinPage() {
                 <li>Submit your application below.</li>
                 <li>Solve our initial qualification CTF challenge.</li>
                 <li>Attend a brief interview with the core team.</li>
-                <li>Welcome to Kavach!</li>
+                <li>Welcome to K.A.V.A.C.H.!</li>
               </ul>
             </div>
           </div>

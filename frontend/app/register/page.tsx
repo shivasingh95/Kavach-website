@@ -213,7 +213,7 @@ export default function RegisterPage() {
             {/* Header */}
             <motion.div variants={itemVariants} className="mb-6">
               <h1 className="text-3xl font-bold mb-2">
-                Join <span className="text-gradient">Kavach</span>
+                Join <span className="text-gradient">K.A.V.A.C.H.</span>
               </h1>
               <p className="text-[var(--text-secondary)] text-sm">
                 Create an account to start your cybersecurity journey.

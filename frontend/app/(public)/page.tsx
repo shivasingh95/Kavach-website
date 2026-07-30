@@ -8,16 +8,16 @@ import BlogCard from '@/components/(public)/BlogCard';
 export const revalidate = 0; // Disable caching to show admin updates immediately
 
 export const metadata: Metadata = {
-  title: 'Kavach — Cybersecurity Club | Defend. Learn. Hack.',
-  description: 'Join Kavach, the premier cybersecurity club for ethical hackers, security researchers, and developers.',
+  title: 'K.A.V.A.C.H. — Cybersecurity Club | Defend. Learn. Hack.',
+  description: 'Join K.A.V.A.C.H., the premier cybersecurity club for ethical hackers, security researchers, and developers.',
   openGraph: {
-    title: 'Kavach — Cybersecurity Club',
+    title: 'K.A.V.A.C.H. — Cybersecurity Club',
     description: 'We hack. We defend. We innovate.',
     type: 'website',
   },
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL + '/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 async function fetchStats() {
   try {
@@ -194,7 +194,7 @@ export default async function HomePage() {
         <div className="container relative z-10 mx-auto px-4 text-center max-w-3xl">
           <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">Ready to join the ranks?</h2>
           <p className="text-xl text-gray-400 mb-10">
-            Whether you are a complete beginner or a seasoned pro, there is a place for you in Kavach. Learn, build, and defend with us.
+            Whether you are a complete beginner or a seasoned pro, there is a place for you in K.A.V.A.C.H. Learn, build, and defend with us.
           </p>
           <Link 
             href="/join"

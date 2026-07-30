@@ -334,3 +334,105 @@ export const reviewSubmission = async (
 
   logger.info(`Admin ${adminId} reviewed submission ${submissionId} as ${data.status}`);
 };
+
+// ─── Get Challenge With Solve Status (for detail page) ───────────────────────
+
+export const getChallengeWithSolveStatus = async (
+  challengeId: string,
+  userId?: string
+): Promise<(Omit<CTFChallenge, 'flagHash'> & { isSolvedByUser: boolean; firstBloodUser: string | null }) | null> => {
+  const doc = await db.collection('ctfChallenges').doc(challengeId).get();
+  if (!doc.exists) return null;
+
+  const data = fromFirestore(doc.data()!) as CTFChallenge;
+  const { flagHash, ...rest } = data;
+
+  let isSolvedByUser = false;
+  let firstBloodUser: string | null = null;
+
+  const checksToRun: Promise<void>[] = [];
+
+  // Check if current user has solved it
+  if (userId) {
+    checksToRun.push(
+      db.collection('ctfSubmissions')
+        .where('userId', '==', userId)
+        .where('challengeId', '==', challengeId)
+        .where('isCorrect', '==', true)
+        .limit(1)
+        .get()
+        .then((snap) => { isSolvedByUser = !snap.empty; })
+    );
+  }
+
+  // Get first blood (first correct submission by time)
+  checksToRun.push(
+    db.collection('ctfSubmissions')
+      .where('challengeId', '==', challengeId)
+      .where('isCorrect', '==', true)
+      .orderBy('submittedAt', 'asc')
+      .limit(1)
+      .get()
+      .then(async (snap) => {
+        if (!snap.empty) {
+          const firstSolve = snap.docs[0].data();
+          const userDoc = await db.collection('users').doc(firstSolve.userId).get();
+          firstBloodUser = userDoc.exists ? (userDoc.data()?.name ?? null) : null;
+        }
+      })
+  );
+
+  await Promise.all(checksToRun);
+
+  return { ...rest, isSolvedByUser, firstBloodUser };
+};
+
+// ─── Get Challenge Solvers ───────────────────────────────────────────────────
+
+export const getChallengeSolvers = async (
+  challengeId: string,
+  limit: number = 20
+): Promise<{ displayName: string; solvedAt: Date; isFirstBlood: boolean }[]> => {
+  const snapshot = await db
+    .collection('ctfSubmissions')
+    .where('challengeId', '==', challengeId)
+    .where('isCorrect', '==', true)
+    .orderBy('submittedAt', 'asc')
+    .limit(limit)
+    .get();
+
+  const solvers = await Promise.all(
+    snapshot.docs.map(async (doc, index) => {
+      const sub = fromFirestore(doc.data());
+      const userDoc = await db.collection('users').doc(sub.userId).get();
+      const displayName = userDoc.exists ? (userDoc.data()?.name ?? 'Anonymous') : 'Anonymous';
+      return {
+        displayName,
+        solvedAt: sub.submittedAt as Date,
+        isFirstBlood: index === 0,
+      };
+    })
+  );
+
+  return solvers;
+};
+
+// ─── Reveal Hint ─────────────────────────────────────────────────────────────
+
+export const revealHint = async (
+  challengeId: string,
+  hintIndex: number
+): Promise<string> => {
+  const doc = await db.collection('ctfChallenges').doc(challengeId).get();
+  if (!doc.exists) throw Object.assign(new Error('Challenge not found'), { statusCode: 404 });
+
+  const data = fromFirestore(doc.data()!) as CTFChallenge;
+  const hints: string[] = data.hints ?? [];
+
+  if (hintIndex < 0 || hintIndex >= hints.length) {
+    throw Object.assign(new Error('Hint not found'), { statusCode: 404 });
+  }
+
+  return hints[hintIndex];
+};
+

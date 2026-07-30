@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as usersController from '../controllers/users.controller';
 import { validate } from '../middleware/validate.middleware';
-import { updateProfileSchema, updateUserRoleSchema } from '../schemas/users.schema';
+import { updateProfileSchema, updateUserRoleSchema, createUserSchema } from '../schemas/users.schema';
 import { requireAuth } from '../middleware/auth.middleware';
 import { rbac } from '../middleware/rbac.middleware';
 import { auditLog } from '../middleware/auditLog.middleware';
@@ -20,6 +20,15 @@ router.patch(
 );
 
 // Admin-only routes
+router.post(
+  '/',
+  requireAuth,
+  rbac('ADMIN'),
+  validate(createUserSchema),
+  auditLog('CREATE_USER', 'user'),
+  usersController.createUser
+);
+
 router.get(
   '/',
   requireAuth,

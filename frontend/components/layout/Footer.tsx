@@ -7,17 +7,12 @@ const footerLinks = {
     { label: "CTF Challenges", href: "/ctf" },
     { label: "Events", href: "/events" },
     { label: "Blog", href: "/blog" },
-    { label: "Achievements", href: "/achievements" },
   ],
   Club: [
-    { label: "About Us", href: "/about" },
     { label: "Join Us", href: "/join" },
     { label: "Contact", href: "/contact" },
-    { label: "Code of Conduct", href: "/conduct" },
   ],
-  Resources: [
-    { label: "Documentation", href: "/docs" },
-    { label: "API Status", href: "/health" },
+  Legal: [
     { label: "Privacy Policy", href: "/privacy" },
     { label: "Terms of Service", href: "/terms" },
   ],

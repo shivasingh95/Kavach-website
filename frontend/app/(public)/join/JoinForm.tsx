@@ -55,13 +55,23 @@ export default function JoinForm() {
   if (isSuccess) {
     return (
       <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-center p-6">
-        <div className="w-16 h-16 bg-kavach-green/10 text-kavach-green rounded-full flex items-center justify-center mb-6 border border-kavach-green/20">
+        <div className="w-16 h-16 bg-kavach-cyan/10 text-kavach-cyan rounded-full flex items-center justify-center mb-6 border border-kavach-cyan/20">
           <CheckCircle2 size={32} />
         </div>
-        <h3 className="text-2xl font-bold text-white mb-2">Application Submitted!</h3>
-        <p className="text-gray-400">
-          Thank you for applying to Kavach. We will review your application and get back to you soon.
+        <h3 className="text-2xl font-bold text-white mb-3">Application Received!</h3>
+        <p className="text-gray-400 mb-4 leading-relaxed">
+          Your application is under review. Our team will verify your details within <span className="text-kavach-cyan font-semibold">24 hours</span>.
         </p>
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-300 space-y-2 text-left max-w-sm">
+          <p className="flex items-start gap-2">
+            <span className="text-kavach-cyan mt-0.5">✓</span>
+            Once accepted, you will receive your login credentials via email.
+          </p>
+          <p className="flex items-start gap-2">
+            <span className="text-kavach-cyan mt-0.5">✓</span>
+            You'll get a link to set your own password and activate your account.
+          </p>
+        </div>
       </div>
     );
   }
@@ -177,7 +187,7 @@ export default function JoinForm() {
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="whyJoin" className="text-sm font-medium text-gray-300">Why do you want to join Kavach? *</label>
+        <label htmlFor="whyJoin" className="text-sm font-medium text-gray-300">Why do you want to join K.A.V.A.C.H.? *</label>
         <textarea
           id="whyJoin"
           rows={4}

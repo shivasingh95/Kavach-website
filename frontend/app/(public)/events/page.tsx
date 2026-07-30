@@ -1,18 +1,18 @@
 import { Metadata } from 'next';
 import EventsTabs from './EventsTabs';
 
-export const revalidate = 1800; // 30 minutes
+export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: 'Events — Kavach Cybersecurity Club',
+  title: 'Events — K.A.V.A.C.H. Cybersecurity Club',
   description: 'Join our workshops, hackathons, and guest lectures to level up your cybersecurity skills.',
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL + '/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 async function fetchEvents() {
   try {
-    const res = await fetch(`${API_BASE}/events?published=true`, { next: { revalidate: 1800 } });
+    const res = await fetch(`${API_BASE}/events?published=true`, { cache: 'no-store' });
     if (!res.ok) return [];
     const json = await res.json();
     return json.data.events;

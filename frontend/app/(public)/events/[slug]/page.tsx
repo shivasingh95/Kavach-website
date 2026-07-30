@@ -5,13 +5,13 @@ import { Calendar, MapPin, Video, Users, ArrowLeft } from 'lucide-react';
 import MarkdownRenderer from '@/components/(public)/MarkdownRenderer';
 import RSVPButton, { RSVPShareButtons } from './RSVPButton';
 
-export const revalidate = 3600;
+export const revalidate = 0;
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL + '/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 async function fetchEvent(slug: string) {
   try {
-    const res = await fetch(`${API_BASE}/events/${slug}`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API_BASE}/events/${slug}`, { cache: 'no-store' });
     if (!res.ok) return null;
     const json = await res.json();
     return json.data.event;
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   if (!event) return { title: 'Event Not Found' };
 
   return {
-    title: `${event.title} — Kavach Cybersecurity Club`,
+    title: `${event.title} — K.A.V.A.C.H. Cybersecurity Club`,
     description: event.description,
     openGraph: {
       title: event.title,

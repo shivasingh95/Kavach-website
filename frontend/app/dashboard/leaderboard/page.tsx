@@ -40,7 +40,7 @@ export default function LeaderboardPage() {
           Global <span className="text-gradient">Leaderboard</span>
         </h1>
         <p className="text-[var(--text-secondary)] max-w-lg">
-          The most elite operatives in the Kavach network. Solve CTF challenges and participate in events to climb the ranks.
+          The most elite operatives in the K.A.V.A.C.H. network. Solve CTF challenges and participate in events to climb the ranks.
         </p>
       </div>
 

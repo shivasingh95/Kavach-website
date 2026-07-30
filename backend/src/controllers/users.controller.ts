@@ -86,3 +86,17 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
     next(error);
   }
 };
+
+export const createUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { name, email, role } = req.body;
+    const user = await usersService.createUser(name, email, role);
+    res.status(201).json({
+      success: true,
+      data: { user },
+      message: `User created successfully. A password setup email has been sent to ${email}.`,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

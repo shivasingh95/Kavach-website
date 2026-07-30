@@ -158,7 +158,7 @@ export default function Navbar() {
           <div className="space-y-1.5" aria-hidden="true">
             <motion.span
               className="block w-6 h-0.5 bg-kavach-cyan origin-center"
-              animate={mobileOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
+              animate={mobileOpen ? { rotate: 45, y: 4 } : { rotate: 0, y: 0 }}
               transition={{ duration: 0.3 }}
             />
             <motion.span
@@ -168,7 +168,7 @@ export default function Navbar() {
             />
             <motion.span
               className="block w-6 h-0.5 bg-kavach-cyan origin-center"
-              animate={mobileOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
+              animate={mobileOpen ? { rotate: -45, y: -4 } : { rotate: 0, y: 0 }}
               transition={{ duration: 0.3 }}
             />
           </div>
@@ -221,7 +221,7 @@ export default function Navbar() {
                       Login
                     </Link>
                     <Link href="/register" className="btn-primary text-center text-sm">
-                      Join Kavach
+                      Join K.A.V.A.C.H.
                     </Link>
                   </>
                 )}

@@ -34,7 +34,7 @@ export default function CTASection() {
           </h2>
 
           <p className="text-lg text-[var(--text-secondary)] leading-relaxed mb-8 max-w-lg mx-auto">
-            Whether you&apos;re a beginner curious about security or an experienced hacker looking for a community — Kavach has a place for you.
+            Whether you&apos;re a beginner curious about security or an experienced hacker looking for a community — K.A.V.A.C.H. has a place for you.
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -45,7 +45,7 @@ export default function CTASection() {
                 <line x1="20" y1="8" x2="20" y2="14" />
                 <line x1="23" y1="11" x2="17" y2="11" />
               </svg>
-              Join Kavach Today
+              Join K.A.V.A.C.H. Today
             </a>
             <a href="mailto:thakurshivasinghraghuwanshi@gmail.com" className="btn-secondary text-base">
               Contact Us

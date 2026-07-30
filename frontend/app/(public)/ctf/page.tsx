@@ -1,18 +1,18 @@
 import { Metadata } from 'next';
 import CTFDashboard from './CTFDashboard';
 
-export const revalidate = 60; // Refresh more often for CTF (1 minute)
+export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: 'CTF Dashboard — Kavach Cybersecurity Club',
+  title: 'CTF Dashboard — K.A.V.A.C.H. Cybersecurity Club',
   description: 'Participate in Capture The Flag challenges to learn ethical hacking and win prizes.',
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL + '/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 async function fetchChallenges() {
   try {
-    const res = await fetch(`${API_BASE}/ctf/challenges?active=true`, { next: { revalidate: 60 } });
+    const res = await fetch(`${API_BASE}/ctf/challenges?active=true`, { cache: 'no-store' });
     if (!res.ok) return [];
     const json = await res.json();
     return json.data.challenges || [];

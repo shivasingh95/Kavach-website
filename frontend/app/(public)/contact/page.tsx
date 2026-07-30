@@ -2,8 +2,8 @@ import { Metadata } from 'next';
 import ContactForm from './ContactForm';
 
 export const metadata: Metadata = {
-  title: 'Contact Us — Kavach Cybersecurity Club',
-  description: 'Get in touch with the Kavach team for inquiries, partnerships, or support.',
+  title: 'Contact Us — K.A.V.A.C.H. Cybersecurity Club',
+  description: 'Get in touch with the K.A.V.A.C.H. team for inquiries, partnerships, or support.',
 };
 
 export default function ContactPage() {

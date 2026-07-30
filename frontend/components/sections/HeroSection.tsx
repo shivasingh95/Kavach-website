@@ -67,7 +67,7 @@ export default function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7, duration: 0.6 }}
         >
-          Kavach is the premier college cybersecurity club. Master ethical hacking,
+          K.A.V.A.C.H. is the premier college cybersecurity club. Master ethical hacking,
           compete in CTF challenges, and build the skills that protect the digital world.
         </motion.p>
 
@@ -133,7 +133,7 @@ function TerminalText() {
   const lines = [
     { prefix: "$ ", text: "kavach --join --year 2026", color: "text-kavach-green" },
     { prefix: "→ ", text: "Initializing secure connection...", color: "text-[var(--text-muted)]" },
-    { prefix: "✓ ", text: "Welcome to Kavach. You are now protected.", color: "text-kavach-cyan" },
+    { prefix: "✓ ", text: "Welcome to K.A.V.A.C.H. You are now protected.", color: "text-kavach-cyan" },
   ];
 
   return (

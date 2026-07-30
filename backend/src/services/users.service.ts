@@ -1,5 +1,7 @@
-import { db } from '../utils/firebase-admin';
+import admin, { db } from '../utils/firebase-admin';
+import { createId } from '@paralleldrive/cuid2';
 import { logger } from '../utils/logger';
+import { sendEmail } from '../utils/email';
 import type { User, PublicUser, Role } from '../types/models';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -130,4 +132,95 @@ export const toggleUserActive = async (userId: string): Promise<boolean> => {
 export const deleteUser = async (userId: string): Promise<void> => {
   await db.collection('users').doc(userId).delete();
   logger.info(`User deleted: ${userId}`);
+};
+
+// ─── Create User (Admin) ────────────────────────────────────────────────────
+
+export const createUser = async (
+  name: string,
+  email: string,
+  role: Role = 'MEMBER'
+): Promise<PublicUser> => {
+  // Check if a user with this email already exists
+  const existing = await db.collection('users').where('email', '==', email).limit(1).get();
+  if (!existing.empty) {
+    throw Object.assign(new Error('A user with this email already exists'), { statusCode: 409 });
+  }
+
+  // Create Firebase Auth user
+  let firebaseUid: string;
+  try {
+    const authUser = await admin.auth().createUser({
+      email,
+      displayName: name,
+      emailVerified: false,
+    });
+    firebaseUid = authUser.uid;
+    logger.info(`Created Firebase Auth user for admin-created account: ${email}`);
+  } catch (err: any) {
+    // If auth user already exists, get their UID
+    if (err.code === 'auth/email-already-exists') {
+      const existingAuth = await admin.auth().getUserByEmail(email);
+      firebaseUid = existingAuth.uid;
+    } else {
+      throw err;
+    }
+  }
+
+  // Create Firestore user document
+  const id = createId();
+  const now = new Date();
+  const userData = {
+    id,
+    email,
+    name,
+    passwordHash: '', // Firebase Auth manages the password
+    role,
+    isVerified: false,
+    isActive: true,
+    totalPoints: 0,
+    firebaseUid,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await db.collection('users').doc(id).set(userData);
+  logger.info(`Admin created user: ${email} with role: ${role}`);
+
+  // Generate a password-reset link so the new user can set their own password
+  try {
+    const resetLink = await admin.auth().generatePasswordResetLink(email, {
+      url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`,
+    });
+
+    await sendEmail(
+      email,
+      '🔐 You\'ve been added to Kavach — Set Your Password',
+      `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #050816; color: #ffffff; padding: 40px; border-radius: 12px;">
+        <h1 style="color: #00f0ff; margin-bottom: 8px;">Welcome to Kavach, ${name}!</h1>
+        <p style="color: #94a3b8; margin-bottom: 24px;">An administrator has created an account for you on the Kavach platform with <strong style="color: #00f0ff;">${role}</strong> access.</p>
+        
+        <p style="color: #cbd5e1; margin-bottom: 16px;">Please set your password to activate your account:</p>
+        
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${resetLink}" style="display: inline-block; background: #00f0ff; color: #000000; font-weight: bold; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px;">
+            Set Your Password
+          </a>
+        </div>
+        
+        <p style="color: #64748b; font-size: 13px;">This link expires in 24 hours. If you weren't expecting this, please contact the Kavach admin team.</p>
+        
+        <hr style="border: 1px solid #1e293b; margin: 24px 0;" />
+        <p style="color: #475569; font-size: 12px; text-align: center;">Kavach Cybersecurity Club · Defend. Learn. Hack.</p>
+      </div>
+      `
+    );
+    logger.info(`Password setup email sent to ${email}`);
+  } catch (err) {
+    logger.error({ err }, `Failed to send password setup email to ${email}`);
+    // Don't fail — user is created, email is best-effort
+  }
+
+  return toPublicUser(userData as unknown as User);
 };

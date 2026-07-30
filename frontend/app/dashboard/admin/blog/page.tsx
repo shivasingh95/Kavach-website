@@ -189,7 +189,7 @@ export default function AdminBlogPage() {
 </h1>
               <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-kavach-cyan/10 text-kavach-cyan border border-kavach-cyan/20">{posts.length}</span>
             </div>
-            <p className="text-sm text-[var(--text-secondary)] mt-0.5">Create and manage blog posts for the Kavach platform.</p>
+            <p className="text-sm text-[var(--text-secondary)] mt-0.5">Create and manage blog posts for the K.A.V.A.C.H. platform.</p>
             <div className="flex items-center gap-4 mt-2.5">
               <span className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]"><span className="w-1.5 h-1.5 rounded-full bg-kavach-green inline-block" />{publishedCount} published</span>
               <span className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] inline-block" />{draftCount} drafts</span>

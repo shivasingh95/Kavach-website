@@ -36,14 +36,37 @@ export const getAllChallenges = async (req: Request, res: Response, next: NextFu
 
 export const getChallengeById = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const isAdmin = req.user?.role === 'ADMIN';
-    const challenge = await ctfService.getChallengeById(req.params.id, isAdmin);
+    const userId = req.user?.id;
+    const challenge = await ctfService.getChallengeWithSolveStatus(req.params.id, userId);
 
     if (!challenge) {
       return res.status(404).json({ success: false, error: 'Challenge not found', statusCode: 404 });
     }
 
     res.status(200).json({ success: true, data: { challenge } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getChallengeSolvers = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 20;
+    const solvers = await ctfService.getChallengeSolvers(req.params.id, limit);
+    res.status(200).json({ success: true, data: { solvers } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const revealHint = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const hintIndex = parseInt(req.params.hintIndex);
+    if (isNaN(hintIndex) || hintIndex < 0) {
+      return res.status(400).json({ success: false, error: 'Invalid hint index', statusCode: 400 });
+    }
+    const hint = await ctfService.revealHint(req.params.id, hintIndex);
+    res.status(200).json({ success: true, data: { hint } });
   } catch (error) {
     next(error);
   }

@@ -12,6 +12,7 @@ const router = Router();
 // Public routes (optionally auth'd for solve-status)
 router.get('/challenges', ctfController.getAllChallenges);
 router.get('/challenges/:id', ctfController.getChallengeById);
+router.get('/challenges/:id/solvers', ctfController.getChallengeSolvers);
 router.get('/leaderboard', ctfController.getLeaderboard);
 
 // Authenticated routes
@@ -25,6 +26,8 @@ router.post(
 );
 
 router.get('/my-submissions', requireAuth, ctfController.getMySubmissions);
+
+router.patch('/challenges/:id/hint/:hintIndex', requireAuth, ctfController.revealHint);
 
 // Admin-only routes
 router.post(

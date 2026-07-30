@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { LayoutDashboard, Flag, Calendar, User, Newspaper, BookOpen, Trophy, LogOut, Shield, Users, FileText, UserPlus, Star, MessageSquare } from "lucide-react";
+import ErrorBoundary from "@/components/shared/ErrorBoundary";
 
 export default function DashboardLayout({
   children,
@@ -14,26 +16,29 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-kavach-cyan border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // Auth resolved and no user — redirect to login immediately
-  if (!isAuthenticated) {
-    router.replace("/login");
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-kavach-cyan border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-
   const isViewAdmin = pathname.startsWith("/dashboard/admin");
+
+  // Admin auth guard — redirect non-admins away from admin routes
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && isViewAdmin && !isAdmin) {
+      router.replace("/dashboard");
+    }
+  }, [isLoading, isAuthenticated, isViewAdmin, isAdmin, router]);
+
+  // Handle unauthenticated state with useEffect instead of conditional router.replace
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  if (isLoading || (!isAuthenticated && !isLoading)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-kavach-cyan border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   const memberNavItems = [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
@@ -117,7 +122,9 @@ export default function DashboardLayout({
       {/* Main Content Area */}
       <main className="flex-1 w-full overflow-y-auto min-h-[calc(100vh-5rem)] pb-24 md:pb-12">
         <div className="p-4 md:p-8">
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </div>
       </main>
 

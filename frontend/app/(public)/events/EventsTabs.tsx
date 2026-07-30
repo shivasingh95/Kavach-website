@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EventCard from "@/components/(public)/EventCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
@@ -9,9 +9,9 @@ export default function EventsTabs({ initialEvents }: { initialEvents: any[] }) 
   const [mounted, setMounted] = useState(false);
   
   // To avoid hydration mismatch on dates, we just render after mount
-  useState(() => {
+  useEffect(() => {
     setMounted(true);
-  });
+  }, []);
 
   const now = new Date();
   const upcomingEvents = initialEvents.filter((e) => new Date(e.date) >= now);

@@ -2,13 +2,13 @@ import { Metadata } from 'next';
 import PrivacyContent from './PrivacyContent';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — Kavach Cybersecurity Club',
+  title: 'Privacy Policy — K.A.V.A.C.H. Cybersecurity Club',
   description:
-    'Learn how Kavach Cybersecurity Club collects, uses, and protects your personal data. Compliant with DPDPA 2023, GDPR, CCPA, and the IT Act 2000.',
+    'Learn how K.A.V.A.C.H. Cybersecurity Club collects, uses, and protects your personal data. Compliant with DPDPA 2023, GDPR, CCPA, and the IT Act 2000.',
   openGraph: {
-    title: 'Privacy Policy — Kavach',
+    title: 'Privacy Policy — K.A.V.A.C.H.',
     description:
-      'Kavach Privacy Policy — Data protection practices, your rights, and our commitments.',
+      'K.A.V.A.C.H. Privacy Policy — Data protection practices, your rights, and our commitments.',
     type: 'website',
   },
 };
