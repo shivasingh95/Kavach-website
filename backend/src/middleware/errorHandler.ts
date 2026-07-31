@@ -97,7 +97,7 @@ export const errorHandler = (
     }
 
     // --- 6. Unknown / unexpected errors ---
-    logger.error(`[UnhandledError] ${err.message}`, { stack: err.stack, path: req.path });
+    logger.error(`[UnhandledError] ${err.message} | path: ${req.path} | stack: ${err.stack ?? 'N/A'}`);
     res.status(500).json({
       success: false,
       error: isProduction ? 'Internal server error' : err.message,
@@ -107,6 +107,6 @@ export const errorHandler = (
   }
 
   // --- 7. Non-Error thrown (shouldn't happen, but just in case) ---
-  logger.error('[UnknownThrow]', err);
+  logger.error(`[UnknownThrow] ${String(err)}`);
   res.status(500).json({ success: false, error: 'Internal server error', statusCode: 500 });
 };
