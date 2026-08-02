@@ -314,7 +314,8 @@ export default function AdminOverviewPage() {
   const categoryData = data
     ? Object.entries(
         data.submissionsThisWeek.reduce<Record<string, number>>((acc, s) => {
-          const cat = s.challenge.category;
+          const cat = s.challenge?.category;
+          if (!cat) return acc;
           acc[cat] = (acc[cat] ?? 0) + 1;
           return acc;
         }, {})
@@ -675,7 +676,7 @@ export default function AdminOverviewPage() {
                     </td>
                     <td className="px-6 py-4">
                       <p className="text-xs font-medium text-[var(--text-primary)] max-w-[160px] truncate">
-                        {sub.challenge.title}
+                        {sub.challenge?.title ?? "—"}
                       </p>
                     </td>
                     <td className="px-6 py-4">
@@ -683,19 +684,19 @@ export default function AdminOverviewPage() {
                         className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold"
                         style={{
                           color:
-                            CTF_CATEGORY_COLORS[sub.challenge.category] ??
+                            CTF_CATEGORY_COLORS[sub.challenge?.category ?? ""] ??
                             "#7c3aed",
                           background: `${
-                            CTF_CATEGORY_COLORS[sub.challenge.category] ??
+                            CTF_CATEGORY_COLORS[sub.challenge?.category ?? ""] ??
                             "#7c3aed"
                           }15`,
                           border: `1px solid ${
-                            CTF_CATEGORY_COLORS[sub.challenge.category] ??
+                            CTF_CATEGORY_COLORS[sub.challenge?.category ?? ""] ??
                             "#7c3aed"
                           }30`,
                         }}
                       >
-                        {sub.challenge.category}
+                        {sub.challenge?.category ?? "Unknown"}
                       </span>
                     </td>
                     <td className="px-6 py-4">
