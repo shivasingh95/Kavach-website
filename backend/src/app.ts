@@ -36,11 +36,15 @@ const allowedOrigins = [
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
+const isAllowedOrigin = (origin: string) =>
+  allowedOrigins.includes(origin) ||
+  (process.env.NODE_ENV !== 'production' && /^http:\/\/localhost:\d+$/.test(origin));
+
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+    if (isAllowedOrigin(origin) || allowedOrigins.includes('*')) {
       callback(null, true);
     } else {
       // In development, you might want to allow all origins temporarily
