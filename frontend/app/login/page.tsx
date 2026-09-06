@@ -127,7 +127,7 @@ function LoginContent() {
   return (
     <AuthPageWrapper
       backgroundTitle="Defend the Digital Frontier"
-      backgroundSubtitle="Join Kavach — the cybersecurity community building the next generation of security professionals through hands-on challenges and real-world learning."
+      backgroundSubtitle="Join K.A.V.A.C.H. — the cybersecurity community building the next generation of security professionals through hands-on challenges and real-world learning."
     >
       <AnimatePresence mode="wait">
         {success ? (
@@ -165,15 +165,25 @@ function LoginContent() {
             initial="hidden"
             animate="visible"
           >
-            {/* Header */}
-            <motion.div variants={itemVariants} className="mb-8">
-              <h1 className="text-3xl font-bold mb-2">
-                Welcome <span className="text-gradient">Back</span>
-              </h1>
-              <p className="text-[var(--text-secondary)] text-sm">
-                Log in to access your Kavach dashboard.
-              </p>
-            </motion.div>
+ {/* Header */}
+<motion.div variants={itemVariants} className="mb-8">
+
+  <Link
+    href="/"
+    className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-lg border border-kavach-cyan/20 text-kavach-cyan hover:bg-kavach-cyan/10 transition-all"
+  >
+    ← Home
+  </Link>
+
+  <h1 className="text-3xl font-bold mb-2">
+    Welcome <span className="text-gradient">Back</span>
+  </h1>
+
+  <p className="text-[var(--text-secondary)] text-sm">
+   Log in to access your K.A.V.A.C.H. dashboard.
+  </p>
+
+</motion.div>
 
             {/* Registration success banner */}
             {justRegistered && (
@@ -312,7 +322,7 @@ function LoginContent() {
                 href="/register"
                 className="text-kavach-cyan hover:text-white transition-colors font-medium"
               >
-                Join Kavach
+                Join K.A.V.A.C.H.
               </Link>
             </motion.div>
           </motion.div>

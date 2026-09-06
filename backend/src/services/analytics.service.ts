@@ -50,13 +50,19 @@ export const getDashboardStats = async () => {
   const totalAchievements = achievementsSnap.data().count;
   const unreadMessages = contactsSnap.data().count;
 
-  const recentJoinRequests = joinRequestsSnap.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-    createdAt: doc.data().createdAt?.toDate()
-  }));
+  const recentJoinRequests = joinRequestsSnap.docs.map(doc => {
+    const d = doc.data();
+    return {
+      id: doc.id,
+      ...d,
+      // Map Firestore Timestamp → ISO string; expose as appliedAt (frontend field name)
+      appliedAt: (d.createdAt?.toDate() ?? new Date()).toISOString(),
+      createdAt: undefined,
+    };
+  });
 
-  // For submissionsThisWeek, get submissions from last 7 days
+  // For submissionsThisWeek, get submissions from last 7 days and populate
+  // nested challenge + user objects so the frontend can render them directly.
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   
@@ -66,10 +72,47 @@ export const getDashboardStats = async () => {
     .limit(10)
     .get();
 
-  const submissionsThisWeek = weeklySubmissionsSnap.docs.map(doc => ({
+  // Collect unique challengeId and userId values to batch-fetch in parallel
+  const rawSubs = weeklySubmissionsSnap.docs.map(doc => ({
     id: doc.id,
     ...doc.data(),
-    submittedAt: doc.data().submittedAt?.toDate()
+    submittedAt: (doc.data().submittedAt as FirebaseFirestore.Timestamp)?.toDate() ?? new Date(),
+  })) as any[];
+
+  const uniqueChallengeIds = [...new Set(rawSubs.map((s: any) => s.challengeId).filter(Boolean))];
+  const uniqueUserIds      = [...new Set(rawSubs.map((s: any) => s.userId).filter(Boolean))];
+
+  const [challengeDocs, userDocs] = await Promise.all([
+    uniqueChallengeIds.length
+      ? Promise.all(uniqueChallengeIds.map(id => db.collection('ctfChallenges').doc(id as string).get()))
+      : Promise.resolve([]),
+    uniqueUserIds.length
+      ? Promise.all(uniqueUserIds.map(id => db.collection('users').doc(id as string).get()))
+      : Promise.resolve([]),
+  ]);
+
+  const challengeMap = new Map<string, { id: string; title: string; category: string }>();
+  for (const cdoc of challengeDocs) {
+    if (cdoc.exists) {
+      const d = cdoc.data()!;
+      challengeMap.set(cdoc.id, { id: cdoc.id, title: d.title ?? '', category: d.category ?? '' });
+    }
+  }
+
+  const userMap = new Map<string, { id: string; name: string; email: string }>();
+  for (const udoc of userDocs) {
+    if (udoc.exists) {
+      const d = udoc.data()!;
+      userMap.set(udoc.id, { id: udoc.id, name: d.name ?? '', email: d.email ?? '' });
+    }
+  }
+
+  const submissionsThisWeek = rawSubs.map((s: any) => ({
+    id: s.id,
+    user: userMap.get(s.userId) ?? { id: s.userId ?? '', name: 'Unknown', email: '' },
+    challenge: challengeMap.get(s.challengeId) ?? { id: s.challengeId ?? '', title: 'Unknown', category: '' },
+    submittedAt: s.submittedAt,
+    status: s.status ?? 'PENDING',
   }));
 
   // userGrowth: mock data or calculate based on users' createdAt.

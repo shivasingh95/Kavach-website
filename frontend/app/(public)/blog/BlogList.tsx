@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search } from "lucide-react";
 import BlogCard from "@/components/(public)/BlogCard";
 
@@ -37,7 +37,9 @@ export default function BlogList({ initialPosts }: { initialPosts: any[] }) {
   }, [filteredPosts, currentPage]);
 
   // Reset to page 1 on filter change
-  useMemo(() => setCurrentPage(1), [activeCategory, searchQuery]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory, searchQuery]);
 
   return (
     <div>
@@ -49,10 +51,10 @@ export default function BlogList({ initialPosts }: { initialPosts: any[] }) {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                activeCategory === cat 
-                  ? "bg-kavach-cyan text-black" 
-                  : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+                activeCategory === cat
+                  ? "bg-kavach-cyan text-black shadow-[0_0_16px_rgba(0,240,255,0.35)]"
+                  : "bg-white/[0.05] border border-white/10 text-slate-400 hover:text-white hover:border-kavach-cyan/30 hover:bg-white/10"
               }`}
             >
               {cat}
@@ -62,15 +64,16 @@ export default function BlogList({ initialPosts }: { initialPosts: any[] }) {
 
         {/* Search */}
         <div className="relative w-full md:w-72">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
-            <Search size={18} />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+            <Search size={16} />
           </div>
           <input
             type="text"
             placeholder="Search articles..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-kavach-cyan transition-colors"
+            className="w-full gradient-border-card py-2.5 pl-10 pr-4 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-kavach-cyan/50 transition-all"
+            style={{ background: 'rgba(13,18,36,0.8)', border: '1px solid rgba(0,240,255,0.12)', borderRadius: '12px' }}
           />
         </div>
       </div>
@@ -83,9 +86,10 @@ export default function BlogList({ initialPosts }: { initialPosts: any[] }) {
           ))}
         </div>
       ) : (
-        <div className="py-24 text-center border border-white/5 rounded-2xl bg-white/5 mb-12">
-          <h3 className="text-xl font-bold text-white mb-2">No posts found</h3>
-          <p className="text-gray-400">Try adjusting your search or category filter.</p>
+        <div className="cyber-empty-state py-28 text-center mb-12">
+          <div className="text-6xl mb-5">🔍</div>
+          <h3 className="text-2xl font-black text-white mb-3">No posts found</h3>
+          <p className="text-slate-400 max-w-xs mx-auto">Try adjusting your search or selecting a different category.</p>
         </div>
       )}
 

@@ -404,7 +404,7 @@ export default function AdminEventsPage() {
               </span>
             </div>
             <p className="text-sm text-[var(--text-secondary)] mt-0.5">
-              Create, schedule, and manage Kavach club events.
+              Create, schedule, and manage K.A.V.A.C.H. club events.
             </p>
 
             {/* Mini stat row */}

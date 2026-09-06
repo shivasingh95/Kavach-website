@@ -10,12 +10,113 @@ import { toast } from "sonner";
 import {
   Shield, ShieldCheck, User as UserIcon, Search, Loader2, AlertTriangle,
   Trash2, ChevronLeft, ChevronRight, Activity, Clock, Calendar,
-  ToggleLeft, ToggleRight, X, Eye, Info,
+  ToggleLeft, ToggleRight, X, Eye, Info, Plus, Mail, UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
+
+// ─── Add User Dialog ──────────────────────────────────────────────────────────
+
+function AddUserDialog({ onSuccess, onClose }: { onSuccess: () => void; onClose: () => void }) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<"MEMBER" | "PUBLIC">("MEMBER");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !email.trim()) { setError("Name and email are required."); return; }
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      await api.post("/users", { name: name.trim(), email: email.trim(), role });
+      toast.success(`User created! A password setup email has been sent to ${email}.`);
+      onSuccess();
+      onClose();
+    } catch (err: any) {
+      setError(err.response?.data?.error ?? err.response?.data?.message ?? "Failed to create user.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/10 bg-[#0d1224] p-6 shadow-2xl">
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-full bg-kavach-cyan/10 border border-kavach-cyan/20">
+              <UserPlus size={18} className="text-kavach-cyan" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[var(--text-primary)]">Add New User</h3>
+              <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">They'll receive an email to set their password.</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-white hover:bg-white/10 transition-all">
+            <X size={16} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs">{error}</div>
+          )}
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-medium text-[var(--text-secondary)]">Full Name *</label>
+            <div className="relative">
+              <UserIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="e.g. John Doe"
+                required
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-white/10 bg-[#080d1a] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-kavach-cyan/40 transition-colors"
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-medium text-[var(--text-secondary)]">Email Address *</label>
+            <div className="relative">
+              <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="john@example.com"
+                required
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-white/10 bg-[#080d1a] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-kavach-cyan/40 transition-colors"
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-medium text-[var(--text-secondary)]">Role</label>
+            <select
+              value={role}
+              onChange={e => setRole(e.target.value as "MEMBER" | "PUBLIC")}
+              className="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-[#080d1a] text-sm text-[var(--text-primary)] focus:outline-none focus:border-kavach-cyan/40 transition-colors"
+            >
+              <option value="MEMBER">MEMBER</option>
+              <option value="PUBLIC">PUBLIC</option>
+            </select>
+          </div>
+          <div className="flex gap-3 pt-1">
+            <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting} className="flex-1 border border-white/10 hover:bg-white/5 text-[var(--text-secondary)]">Cancel</Button>
+            <Button type="submit" disabled={isSubmitting} className="flex-1 bg-kavach-cyan text-black font-bold hover:bg-kavach-cyan/90 gap-2">
+              {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
+              {isSubmitting ? "Creating..." : "Create User"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -154,7 +255,7 @@ function RoleChangeConfirm({ user, newRole, onConfirm, onClose, isChanging }: {
           <div>
             <h3 className="text-sm font-bold text-[var(--text-primary)]">{isPromotion ? "⚠️ Promote to Admin?" : `Change role to ${newRole}`}</h3>
             <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
-              {isPromotion ? `This will give ${user.name} full admin access to the Kavach platform.` : `${user.name} will be set to ${newRole}.`}
+              {isPromotion ? `This will give ${user.name} full admin access to the K.A.V.A.C.H. platform.` : `${user.name} will be set to ${newRole}.`}
             </p>
           </div>
         </div>
@@ -289,6 +390,7 @@ export default function AdminUsersPage() {
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [roleChangeTarget, setRoleChangeTarget] = useState<{ user: UserRecord; newRole: Role } | null>(null);
   const [isChangingRole, setIsChangingRole] = useState(false);
+  const [showAddUser, setShowAddUser] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAdmin) { toast.error("Admin access required."); router.replace("/dashboard"); }
@@ -376,6 +478,7 @@ export default function AdminUsersPage() {
 
   return (
     <>
+      {showAddUser && <AddUserDialog onSuccess={fetchUsers} onClose={() => setShowAddUser(false)} />}
       <DeleteConfirm user={deleteTarget} onConfirm={handleDelete} onClose={() => setDeleteTarget(null)} isDeleting={isDeleting} />
       <RoleChangeConfirm user={roleChangeTarget?.user ?? null} newRole={roleChangeTarget?.newRole ?? null}
         onConfirm={confirmRoleChange} onClose={() => setRoleChangeTarget(null)} isChanging={isChangingRole} />
@@ -384,9 +487,20 @@ export default function AdminUsersPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-black tracking-tight text-[var(--text-primary)] [background:var(--gradient-accent)] [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">Users</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-kavach-cyan/10 text-kavach-cyan border border-kavach-cyan/20">{total}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+<h1 className="text-2xl font-black tracking-tight text-kavach-cyan">
+  Users
+</h1>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-kavach-cyan/10 text-kavach-cyan border border-kavach-cyan/20">{total}</span>
+            </div>
+            <Button
+              id="add-user-btn"
+              onClick={() => setShowAddUser(true)}
+              className="bg-kavach-cyan text-black font-bold hover:bg-kavach-cyan/90 gap-2 text-xs px-4 py-2"
+            >
+              <Plus size={14} /> Add User
+            </Button>
           </div>
           <p className="text-sm text-[var(--text-secondary)] mt-0.5">Manage member roles, active status, and accounts.</p>
         </div>

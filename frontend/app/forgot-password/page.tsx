@@ -16,7 +16,7 @@ const containerVariants = {
 
 const itemVariants = {
   hidden: { opacity: 0, y: 15 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
 };
 
 export default function ForgotPasswordPage() {
@@ -54,7 +54,7 @@ export default function ForgotPasswordPage() {
   return (
     <AuthPageWrapper
       backgroundTitle="Defend the Digital Frontier"
-      backgroundSubtitle="Join Kavach — the cybersecurity community building the next generation of security professionals through hands-on challenges and real-world learning."
+      backgroundSubtitle="Join K.A.V.A.C.H. — the cybersecurity community building the next generation of security professionals through hands-on challenges and real-world learning."
     >
       <AnimatePresence mode="wait">
         {success ? (

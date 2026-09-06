@@ -89,7 +89,7 @@ export default function FeaturesSection() {
             <span className="text-gradient">Level Up</span>
           </h2>
           <p className="section-subtitle mx-auto mt-4">
-            From CTF competitions to knowledge sharing — Kavach provides a complete ecosystem for aspiring cybersecurity professionals.
+            From CTF competitions to knowledge sharing — K.A.V.A.C.H. provides a complete ecosystem for aspiring cybersecurity professionals.
           </p>
         </motion.div>
 

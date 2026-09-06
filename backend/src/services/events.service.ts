@@ -113,8 +113,12 @@ export const getAllEvents = async (
     results.sort((a, b) => b.date.getTime() - a.date.getTime());
   }
 
-  // 2. Filter by isPublished status
-  if (!filters?.includeUnpublished || filters.published) {
+  // 2. Filter by isPublished status.
+  // Show only published events unless the caller is an admin (includeUnpublished: true)
+  // AND hasn't explicitly asked for only published ones.
+  const callerIsAdmin = filters?.includeUnpublished === true;
+  const explicitlyWantsPublished = filters?.published === true;
+  if (!callerIsAdmin || explicitlyWantsPublished) {
     results = results.filter(e => e.isPublished === true);
   }
 
