@@ -1,5 +1,6 @@
-import admin, { db } from '../utils/firebase-admin';
+import { db } from '../utils/firebase-admin';
 import { createId } from '@paralleldrive/cuid2';
+import crypto from 'crypto';
 import { logger } from '../utils/logger';
 import { sendEmail } from '../utils/email';
 import type { User, PublicUser, Role } from '../types/models';
@@ -147,39 +148,23 @@ export const createUser = async (
     throw Object.assign(new Error('A user with this email already exists'), { statusCode: 409 });
   }
 
-  // Create Firebase Auth user
-  let firebaseUid: string;
-  try {
-    const authUser = await admin.auth().createUser({
-      email,
-      displayName: name,
-      emailVerified: false,
-    });
-    firebaseUid = authUser.uid;
-    logger.info(`Created Firebase Auth user for admin-created account: ${email}`);
-  } catch (err: any) {
-    // If auth user already exists, get their UID
-    if (err.code === 'auth/email-already-exists') {
-      const existingAuth = await admin.auth().getUserByEmail(email);
-      firebaseUid = existingAuth.uid;
-    } else {
-      throw err;
-    }
-  }
-
   // Create Firestore user document
   const id = createId();
   const now = new Date();
+  const setupToken = crypto.randomBytes(32).toString('hex');
+  const setupTokenHash = crypto.createHash('sha256').update(setupToken).digest('hex');
+  const setupExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
   const userData = {
     id,
     email,
     name,
-    passwordHash: '', // Firebase Auth manages the password
+    passwordHash: '',
     role,
-    isVerified: false,
+    isVerified: true,
     isActive: true,
     totalPoints: 0,
-    firebaseUid,
+    resetToken: setupTokenHash,
+    resetExpiry: setupExpiry,
     createdAt: now,
     updatedAt: now,
   };
@@ -187,11 +172,9 @@ export const createUser = async (
   await db.collection('users').doc(id).set(userData);
   logger.info(`Admin created user: ${email} with role: ${role}`);
 
-  // Generate a password-reset link so the new user can set their own password
+  // Use the same custom password setup flow as approved join requests.
   try {
-    const resetLink = await admin.auth().generatePasswordResetLink(email, {
-      url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`,
-    });
+    const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/set-password?token=${setupToken}`;
 
     await sendEmail(
       email,

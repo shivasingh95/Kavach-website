@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import { createId } from '@paralleldrive/cuid2';
 import { db } from '../utils/firebase-admin';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt';
@@ -115,6 +116,36 @@ export const loginUser = async (
   await db.collection('refreshTokens').doc(tokenId).set(tokenDoc);
 
   return { user: toPublicUser(user), accessToken, refreshToken };
+};
+
+export const setPassword = async (token: string, newPassword: string): Promise<void> => {
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const snapshot = await db
+    .collection('users')
+    .where('resetToken', '==', tokenHash)
+    .limit(1)
+    .get();
+
+  if (snapshot.empty) {
+    throw Object.assign(new Error('Invalid or expired password setup link'), { statusCode: 400 });
+  }
+
+  const userDoc = snapshot.docs[0];
+  const user = fromFirestore(userDoc.data()) as User;
+  const resetExpiry = user.resetExpiry ? new Date(user.resetExpiry) : null;
+
+  if (!resetExpiry || resetExpiry.getTime() < Date.now()) {
+    throw Object.assign(new Error('Invalid or expired password setup link'), { statusCode: 400 });
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+  await userDoc.ref.update({
+    passwordHash,
+    resetToken: null,
+    resetExpiry: null,
+    isVerified: true,
+    updatedAt: new Date(),
+  });
 };
 
 // ─── Logout ──────────────────────────────────────────────────────────────────
