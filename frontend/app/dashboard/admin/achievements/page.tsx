@@ -456,9 +456,7 @@ export default function AdminAchievementsPage() {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-3">
-<h1 className="text-2xl font-black tracking-tight text-kavach-cyan">
-  Achievements
-</h1>
+              <h1 className="text-2xl font-black tracking-tight text-[var(--text-primary)] [background:var(--gradient-accent)] [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">Achievements</h1>
               <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-kavach-cyan/10 text-kavach-cyan border border-kavach-cyan/20">{achievements.length}</span>
             </div>
             <p className="text-sm text-[var(--text-secondary)] mt-0.5">Showcase member awards, competition wins, and recognitions.</p>

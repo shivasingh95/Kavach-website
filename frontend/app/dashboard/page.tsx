@@ -182,9 +182,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tight">
             Welcome back,{" "}
-<span className="text-kavach-cyan">
-  {firstName}
-</span>
+            <span className="[background:var(--gradient-accent)] [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">{firstName}</span>
             {" "}👋
           </h1>
           <div className="flex items-center gap-3 mt-2 flex-wrap">
