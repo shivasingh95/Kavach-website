@@ -15,6 +15,13 @@ export const loginSchema = z.object({
   })
 });
 
+export const setPasswordSchema = z.object({
+  body: z.object({
+    token: z.string().min(1, 'Reset token is required'),
+    newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+  }),
+});
+
 export const resetPasswordSchema = z.object({
   body: z.object({
     token: z.string().min(1, 'Token is required'),

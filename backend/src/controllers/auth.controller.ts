@@ -44,6 +44,18 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   }
 };
 
+export const setPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await authService.setPassword(req.body.token, req.body.newPassword);
+    res.status(200).json({
+      success: true,
+      message: 'Password set successfully. You can now log in.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const logout = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const refreshToken = req.cookies.refreshToken;

@@ -58,6 +58,16 @@ export const errorHandler = (
 
   // --- 3. JWT errors ---
   if (err instanceof Error) {
+    const operationalError = err as Error & { statusCode?: number };
+    if (operationalError.statusCode && operationalError.statusCode >= 400 && operationalError.statusCode < 600) {
+      res.status(operationalError.statusCode).json({
+        success: false,
+        error: operationalError.message,
+        statusCode: operationalError.statusCode,
+      });
+      return;
+    }
+
     if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
       res.status(401).json({
         success: false,
