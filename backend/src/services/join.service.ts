@@ -113,7 +113,7 @@ export const updateJoinRequest = async (id: string, data: any, adminId: string):
       data.userId = userId;
       logger.info(`Successfully provisioned account for ${email}`);
     } catch (err) {
-      logger.error({ err }, `Failed to provision account for accepted join request ${id}`);
+      logger.error(`Failed to provision account for accepted join request ${id}: ${String(err)}`);
       // Don't block the status update — just log the error
     }
   }
@@ -140,8 +140,7 @@ export const updateJoinRequest = async (id: string, data: any, adminId: string):
       );
       logger.info(`Rejection email sent to ${email} for join request ${id}`);
     } catch (err) {
-      logger.error({ err }, `Failed to send rejection email for join request ${id}`);
-    }
+      logger.error(`Failed to send rejection email for join request ${id}: ${String(err)}`);    }
   }
 
   const updateData = {
