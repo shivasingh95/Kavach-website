@@ -10,10 +10,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Render Deploy Hook (Backend)
-        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
-        
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$RENDER_DEPLOY_HOOK" ]; then
+            curl -s -S -X POST "$RENDER_DEPLOY_HOOK"
+            echo "Render deploy hook triggered successfully."
+          else
+            echo "RENDER_DEPLOY_HOOK secret is not set. Skipping (Render automatically deploys on git push)."
+          fi
+
       - name: Trigger Vercel Deploy Hook (Frontend)
-        run: curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK }}
-        
-      # Database migration would ideally run securely, often within the backend deploy step
-      # or a separate GitHub Action connecting to the Neon DB.
+        env:
+          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$VERCEL_DEPLOY_HOOK" ]; then
+            curl -s -S -X POST "$VERCEL_DEPLOY_HOOK"
+            echo "Vercel deploy hook triggered successfully."
+          else
+            echo "VERCEL_DEPLOY_HOOK secret is not set. Skipping (Vercel automatically deploys on git push)."
+          fi
